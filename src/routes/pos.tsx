@@ -71,7 +71,19 @@ function PosPage() {
   const [splitCash, setSplitCash] = useState(0);
   const [splitMobile, setSplitMobile] = useState(0);
   const [splitCard, setSplitCard] = useState(0);
-  const hydrated = ready && (products?.length ?? 0) > 0;
+  const [dbReady, setDbReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    ensureSeeded().then(() => {
+      if (mounted) setDbReady(true);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const hydrated = ready && dbReady && (products?.length ?? 0) > 0;
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
