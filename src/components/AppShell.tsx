@@ -35,8 +35,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // The login screen renders bare — no register chrome around it.
   if (pathname === "/login") return <>{children}</>;
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email || "";
-  const avatarUrl = profile?.avatar_url || (user?.user_metadata?.avatar_url as string | undefined);
+  const displayName =
+    profile?.full_name || (user?.user_metadata?.["full_name"] as string | undefined) || user?.email || "";
+  const avatarUrl =
+    profile?.avatar_url || (user?.user_metadata?.["avatar_url"] as string | undefined);
 
   const handleSignOut = async () => {
     await signOut();
