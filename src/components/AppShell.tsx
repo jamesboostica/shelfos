@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "@tanstack/react-router";
-import { BarChart3, CloudOff, Cloud, Package, RefreshCw, ScanLine, Wallet, Lock } from "lucide-react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { BarChart3, CloudOff, Cloud, LogOut, Package, RefreshCw, ScanLine, Wallet, Lock } from "lucide-react";
 import { ShelfOSLogo } from "@/components/brand/Logo";
 import { PinDialog } from "@/components/PinDialog";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,12 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift } =
+  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, signOut } =
     useShelfOS();
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
   const { pathname } = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const t = setInterval(() => setNow(clockTime()), 15000);
@@ -30,6 +31,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const synced = online && queuedCount === 0;
   const queuedValue = pendingOrders.reduce((s, o) => s + o.total_amount, 0);
+
+  // The login screen renders bare — no register chrome around it.
+  if (pathname === "/login") return <>{children}</>;
+
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email || "";
+  const avatarUrl = profile?.avatar_url || (user?.user_metadata?.avatar_url as string | undefined);
+
+  const handleSignOut = async () => {
+    await signOut();
+    void navigate({ to: "/login", replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-background">
