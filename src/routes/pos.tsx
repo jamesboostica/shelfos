@@ -14,6 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ReceiptModal } from "@/components/ReceiptModal";
+import { RegisterPreloader } from "@/components/pos/RegisterPreloader";
+import { QuickAddProductDrawer } from "@/components/QuickAddProductDrawer";
 import { getDb, type PaymentMethod, type Product } from "@/lib/db";
 import { amountOnly, kes, taxBreakdown } from "@/lib/format";
 import type { ReceiptData } from "@/lib/receipt";
