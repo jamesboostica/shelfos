@@ -40,7 +40,7 @@ export const Route = createFileRoute("/inventory")({
 });
 
 type Draft = {
-  id?: number;
+  id?: number | undefined;
   name: string;
   sku: string;
   category: string;
