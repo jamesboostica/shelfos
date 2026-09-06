@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Minus, PackagePlus, Plus, Search, SplitSquareHorizontal, Trash2, Wallet } from "lucide-react";
@@ -16,7 +16,7 @@ import {
 import { ReceiptModal } from "@/components/ReceiptModal";
 import { RegisterPreloader } from "@/components/pos/RegisterPreloader";
 import { QuickAddProductDrawer } from "@/components/QuickAddProductDrawer";
-import { CATEGORIES, getDb, type PaymentMethod, type Product } from "@/lib/db";
+import { CATEGORIES, ensureSeeded, getDb, type PaymentMethod, type Product } from "@/lib/db";
 import { amountOnly, kes, taxBreakdown } from "@/lib/format";
 import type { ReceiptData } from "@/lib/receipt";
 import { useShelfOS } from "@/lib/shelfos-store";
@@ -71,7 +71,19 @@ function PosPage() {
   const [splitCash, setSplitCash] = useState(0);
   const [splitMobile, setSplitMobile] = useState(0);
   const [splitCard, setSplitCard] = useState(0);
-  const hydrated = ready && (products?.length ?? 0) > 0;
+  const [dbReady, setDbReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    ensureSeeded().then(() => {
+      if (mounted) setDbReady(true);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const hydrated = ready && dbReady && (products?.length ?? 0) > 0;
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -244,7 +256,9 @@ function PosPage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 lg:h-[calc(100vh-104px)] lg:flex-row lg:p-6">
+    <>
+      {hydrated && (
+        <div className="flex flex-col gap-4 p-4 lg:h-[calc(100vh-104px)] lg:flex-row lg:p-6">
       {/* Catalogue */}
       <section className="flex min-h-0 flex-col gap-3 lg:w-3/5">
         <div className="sticky top-[104px] z-20 space-y-3 rounded-xl border border-border bg-card p-3 shadow-card">
@@ -530,7 +544,7 @@ function PosPage() {
         </div>
       </aside>
 
-      <RegisterPreloader done={hydrated} />
+      
       <QuickAddProductDrawer open={addOpen} onOpenChange={setAddOpen} />
       <ReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
 
@@ -559,6 +573,9 @@ function PosPage() {
         </DialogContent>
       </Dialog>
     </div>
+      )}
+      <RegisterPreloader done={hydrated} />
+    </>
   );
 }
 
