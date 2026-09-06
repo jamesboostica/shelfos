@@ -237,16 +237,22 @@ function PosPage() {
       {/* Catalogue */}
       <section className="flex min-h-0 flex-col gap-3 lg:w-3/5">
         <div className="sticky top-[104px] z-20 space-y-3 rounded-xl border border-border bg-card p-3 shadow-card">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-            <Input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Scan or search by item name or SKU…"
-              className="touch-target pl-9 text-base"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
+              <Input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Scan or search by item name or SKU…"
+                className="touch-target pl-9 text-base"
+              />
+            </div>
+            <Button variant="outline" className="touch-target shrink-0" onClick={() => setAddOpen(true)}>
+              <PackagePlus className="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
           </div>
           <div className="flex flex-wrap gap-2">
             {CATEGORY_PILLS.map((c) => (
