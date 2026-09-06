@@ -573,6 +573,9 @@ function PosPage() {
         </DialogContent>
       </Dialog>
     </div>
+      )}
+      <RegisterPreloader done={hydrated} />
+    </>
   );
 }
 
