@@ -16,9 +16,9 @@ export interface ReceiptData {
   tax: number;
   total: number;
   payment_method: string;
-  tendered?: number;
-  change?: number;
-  reference?: string;
+  tendered?: number | undefined;
+  change?: number | undefined;
+  reference?: string | undefined;
 }
 
 export const STORE_NAME = "ShelfOS Retail";

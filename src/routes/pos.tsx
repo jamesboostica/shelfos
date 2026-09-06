@@ -419,7 +419,7 @@ function PosPage() {
       <ReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
 
       <Dialog open={!shift}>
-        <DialogContent className="sm:max-w-sm" showCloseButton={false}>
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Wallet className="h-5 w-5 text-brand" /> Open the register
