@@ -48,6 +48,8 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   const [online, setOnline] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [ready, setReady] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
   const busy = useRef(false);
 
   const pendingOrders = useLiveQuery(
@@ -68,6 +70,49 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       busy.current = false;
       setSyncing(false);
     }
+  }, []);
+
+  const loadProfile = useCallback(async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, avatar_url, role")
+      .eq("id", userId)
+      .maybeSingle();
+    if (data) {
+      const p = data as AuthProfile;
+      setProfile(p);
+      // The account role is authoritative: a cashier login locks the till to cashier mode.
+      setRoleState(p.role === "manager" ? "manager" : "cashier");
+      localStorage.setItem("shelfos:role", p.role === "manager" ? "manager" : "cashier");
+    }
+  }, []);
+
+  // Auth listener: keep the signed-in user and their profile role in sync.
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUser(data.user);
+        void loadProfile(data.user.id);
+      }
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      const u = session?.user ?? null;
+      setUser(u);
+      if (u) void loadProfile(u.id);
+      else setProfile(null);
+    });
+    return () => subscription.unsubscribe();
+  }, [loadProfile]);
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
+    setRoleState("cashier");
+    localStorage.setItem("shelfos:role", "cashier");
   }, []);
 
   useEffect(() => {
