@@ -83,7 +83,10 @@ function PosPage() {
 
   const total = cart.reduce((s, l) => s + l.unit_price * l.quantity, 0);
   const { net, tax } = taxBreakdown(total);
-  const change = Math.max(0, tendered - total);
+  const splitTotal = splitCash + splitMobile + splitCard;
+  const covered = split ? splitTotal : method === "cash" ? tendered : total;
+  const change = Math.max(0, covered - total);
+  const shortfall = Math.max(0, total - splitTotal);
 
   const addToCart = (p: Product) => {
     if (p.stock_quantity <= 0) return;
