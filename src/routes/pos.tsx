@@ -256,7 +256,9 @@ function PosPage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 lg:h-[calc(100vh-104px)] lg:flex-row lg:p-6">
+    <>
+      {hydrated && (
+        <div className="flex flex-col gap-4 p-4 lg:h-[calc(100vh-104px)] lg:flex-row lg:p-6">
       {/* Catalogue */}
       <section className="flex min-h-0 flex-col gap-3 lg:w-3/5">
         <div className="sticky top-[104px] z-20 space-y-3 rounded-xl border border-border bg-card p-3 shadow-card">
