@@ -3,7 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { getDb } from "@/lib/db";
 import { kes, startOfDay } from "@/lib/format";
-import { useShelfOS } from "@/lib/shelfos-store";
+import { ManagerOnly } from "@/components/ManagerOnly";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -19,22 +19,17 @@ export const Route = createFileRoute("/dashboard")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: DashboardPage,
+  component: () => (
+    <ManagerOnly area="Reports">
+      <DashboardPage />
+    </ManagerOnly>
+  ),
 });
 
 function DashboardPage() {
-  const { role } = useShelfOS();
   const orders = useLiveQuery(() => getDb().orders.toArray(), [], []);
   const items = useLiveQuery(() => getDb().order_items.toArray(), [], []);
   const products = useLiveQuery(() => getDb().products.toArray(), [], []);
-
-  if (role !== "manager") {
-    return (
-      <p className="p-6 text-sm text-muted-foreground">
-        Reports are available in Manager mode. Switch role in the top bar.
-      </p>
-    );
-  }
 
   const today = startOfDay();
   const todays = (orders ?? []).filter((o) => o.created_at >= today);
