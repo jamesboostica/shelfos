@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Minus, Plus, Search, Trash2, Wallet } from "lucide-react";
+import { Minus, PackagePlus, Plus, Search, SplitSquareHorizontal, Trash2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ReceiptModal } from "@/components/ReceiptModal";
+import { RegisterPreloader } from "@/components/pos/RegisterPreloader";
+import { QuickAddProductDrawer } from "@/components/QuickAddProductDrawer";
 import { getDb, type PaymentMethod, type Product } from "@/lib/db";
 import { amountOnly, kes, taxBreakdown } from "@/lib/format";
 import type { ReceiptData } from "@/lib/receipt";
@@ -53,7 +55,7 @@ interface CartLine {
 }
 
 function PosPage() {
-  const { shift } = useShelfOS();
+  const { shift, ready, role } = useShelfOS();
   const products = useLiveQuery(() => getDb().products.where("is_archived").equals(0).toArray(), [], []);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All Items");
@@ -63,6 +65,12 @@ function PosPage() {
   const [reference, setReference] = useState("");
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [float, setFloat] = useState("3000");
+  const [addOpen, setAddOpen] = useState(false);
+  const [split, setSplit] = useState(false);
+  const [splitCash, setSplitCash] = useState(0);
+  const [splitMobile, setSplitMobile] = useState(0);
+  const [splitCard, setSplitCard] = useState(0);
+  const hydrated = ready && (products?.length ?? 0) > 0;
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -75,7 +83,10 @@ function PosPage() {
 
   const total = cart.reduce((s, l) => s + l.unit_price * l.quantity, 0);
   const { net, tax } = taxBreakdown(total);
-  const change = Math.max(0, tendered - total);
+  const splitTotal = splitCash + splitMobile + splitCard;
+  const covered = split ? splitTotal : method === "cash" ? tendered : total;
+  const change = Math.max(0, covered - total);
+  const shortfall = Math.max(0, total - splitTotal);
 
   const addToCart = (p: Product) => {
     if (p.stock_quantity <= 0) return;
@@ -130,13 +141,25 @@ function PosPage() {
 
   const completeSale = async () => {
     if (cart.length === 0) return;
-    if (method === "cash" && tendered < total) {
+    if (split && shortfall > 0.01) {
+      toast.error(`${kes(shortfall)} still to be paid on this ticket`);
+      return;
+    }
+    if (!split && method === "cash" && tendered < total) {
       toast.error("Cash tendered is less than the total due");
       return;
     }
     const db = getDb();
     const localId = `SO-${Date.now().toString().slice(-8)}`;
     const createdAt = Date.now();
+    const effectiveMethod: PaymentMethod = split
+      ? splitCash >= splitMobile && splitCash >= splitCard
+        ? "cash"
+        : splitMobile >= splitCard
+          ? "mobile_money"
+          : "card"
+      : method;
+    const cashPaid = split ? splitCash : method === "cash" ? tendered : 0;
 
     await db.transaction("rw", db.products, db.orders, db.order_items, db.sync_queue, async () => {
       for (const line of cart) {
@@ -151,13 +174,17 @@ function PosPage() {
         local_id: localId,
         cashier_id: shiftCashier,
         total_amount: total,
-        payment_method: method,
+        payment_method: effectiveMethod,
         split_details: {
           subtotal: net,
           tax,
-          tendered: method === "cash" ? tendered : undefined,
-          change: method === "cash" ? change : undefined,
+          tendered: cashPaid || undefined,
+          change: change || undefined,
           reference: reference || undefined,
+          is_split: split || undefined,
+          cash: split ? splitCash : method === "cash" ? total : undefined,
+          mobile_money: split ? splitMobile : method === "mobile_money" ? total : undefined,
+          card: split ? splitCard : method === "card" ? total : undefined,
         },
         status: "completed",
         created_at: createdAt,
@@ -175,8 +202,10 @@ function PosPage() {
       );
       await db.sync_queue.add({
         entity_type: "order",
-        payload: { local_id: localId, total },
+        entity_id: localId,
+        payload: { local_id: localId, total, items: cart.length },
         status: "pending",
+        retry_count: 0,
         timestamp: createdAt,
       });
     });
@@ -189,14 +218,18 @@ function PosPage() {
       subtotal: net,
       tax,
       total,
-      payment_method: method,
-      tendered: method === "cash" ? tendered : undefined,
-      change: method === "cash" ? change : undefined,
+      payment_method: effectiveMethod,
+      tendered: cashPaid || undefined,
+      change: change || undefined,
       reference: reference || undefined,
     });
     setCart([]);
     setTendered(0);
     setReference("");
+    setSplit(false);
+    setSplitCash(0);
+    setSplitMobile(0);
+    setSplitCard(0);
   };
 
   return (
@@ -204,16 +237,24 @@ function PosPage() {
       {/* Catalogue */}
       <section className="flex min-h-0 flex-col gap-3 lg:w-3/5">
         <div className="sticky top-[104px] z-20 space-y-3 rounded-xl border border-border bg-card p-3 shadow-card">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-            <Input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Scan or search by item name or SKU…"
-              className="touch-target pl-9 text-base"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
+              <Input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Scan or search by item name or SKU…"
+                className="touch-target pl-9 text-base"
+              />
+            </div>
+            {role === "manager" && (
+              <Button variant="outline" className="touch-target shrink-0" onClick={() => setAddOpen(true)}>
+                <PackagePlus className="mr-2 h-4 w-4" />
+                Add Item
+              </Button>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {CATEGORY_PILLS.map((c) => (
@@ -345,16 +386,56 @@ function PosPage() {
             {(["cash", "mobile_money", "card"] as PaymentMethod[]).map((m) => (
               <Button
                 key={m}
-                variant={method === m ? "default" : "outline"}
+                variant={!split && method === m ? "default" : "outline"}
                 className="touch-target text-xs font-semibold"
-                onClick={() => setMethod(m)}
+                onClick={() => {
+                  setSplit(false);
+                  setMethod(m);
+                }}
               >
                 {m === "cash" ? "Cash" : m === "mobile_money" ? "Mobile Money" : "Card"}
               </Button>
             ))}
           </div>
 
-          {method === "mobile_money" && (
+          <Button
+            variant={split ? "default" : "outline"}
+            className="touch-target w-full text-xs font-semibold"
+            onClick={() => setSplit((s) => !s)}
+          >
+            <SplitSquareHorizontal className="mr-2 h-4 w-4" />
+            {split ? "Split payment on" : "Split across tenders"}
+          </Button>
+
+          {split && (
+            <div className="space-y-2 rounded-lg border border-border bg-card p-3">
+              {(
+                [
+                  ["Cash", splitCash, setSplitCash],
+                  ["Mobile Money", splitMobile, setSplitMobile],
+                  ["Card", splitCard, setSplitCard],
+                ] as const
+              ).map(([label, value, setter]) => (
+                <div key={label} className="flex items-center gap-2">
+                  <Label className="w-28 text-xs text-muted-foreground">{label} (KES)</Label>
+                  <Input
+                    inputMode="decimal"
+                    value={value || ""}
+                    onChange={(e) => setter(Number(e.target.value) || 0)}
+                    className="touch-target num"
+                  />
+                </div>
+              ))}
+              <div className="num flex justify-between text-xs font-semibold">
+                <span className="text-muted-foreground">Tendered {kes(splitTotal)}</span>
+                <span className={shortfall > 0 ? "text-danger" : "text-success"}>
+                  {shortfall > 0 ? `${kes(shortfall)} remaining` : `Change ${kes(change)}`}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {(split || method === "mobile_money") && (
             <Input
               value={reference}
               onChange={(e) => setReference(e.target.value)}
@@ -363,10 +444,10 @@ function PosPage() {
             />
           )}
 
-          {method === "cash" && (
+          {!split && method === "cash" && (
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
-                {[500, 1000, 2000].map((v) => (
+                {[100, 500, 1000, 2000].map((v) => (
                   <Button
                     key={v}
                     variant="outline"
@@ -416,6 +497,8 @@ function PosPage() {
         </div>
       </aside>
 
+      <RegisterPreloader done={hydrated} />
+      <QuickAddProductDrawer open={addOpen} onOpenChange={setAddOpen} />
       <ReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
 
       <Dialog open={!shift}>

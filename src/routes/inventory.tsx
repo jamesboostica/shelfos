@@ -16,6 +16,7 @@ import {
 import { CATEGORIES, getDb, type Product } from "@/lib/db";
 import { kes } from "@/lib/format";
 import { useShelfOS } from "@/lib/shelfos-store";
+import { ManagerOnly } from "@/components/ManagerOnly";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/inventory")({
@@ -36,7 +37,11 @@ export const Route = createFileRoute("/inventory")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: InventoryPage,
+  component: () => (
+    <ManagerOnly area="Inventory">
+      <InventoryPage />
+    </ManagerOnly>
+  ),
 });
 
 type Draft = {
@@ -86,20 +91,6 @@ function InventoryPage() {
       ),
     [products, query, lowOnly],
   );
-
-  if (role !== "manager") {
-    return (
-      <div className="p-6">
-        <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-card">
-          <h1 className="text-lg font-bold text-navy">Manager access required</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Stock levels, cost prices and adjustments are only visible in Manager mode. Switch role
-            in the top bar to continue.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const saveDraft = async () => {
     if (!draft) return;

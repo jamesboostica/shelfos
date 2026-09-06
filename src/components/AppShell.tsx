@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { BarChart3, CloudOff, Cloud, Package, ScanLine, Wallet, Lock } from "lucide-react";
+import { BarChart3, CloudOff, Cloud, Package, RefreshCw, ScanLine, Wallet, Lock } from "lucide-react";
 import { ShelfOSLogo } from "@/components/brand/Logo";
 import { PinDialog } from "@/components/PinDialog";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useShelfOS } from "@/lib/shelfos-store";
-import { clockTime } from "@/lib/format";
+import { clockTime, kes } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -16,7 +17,8 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole, online, queuedCount, shift } = useShelfOS();
+  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift } =
+    useShelfOS();
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
   const { pathname } = useLocation();
@@ -27,6 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   const synced = online && queuedCount === 0;
+  const queuedValue = pendingOrders.reduce((s, o) => s + o.total_amount, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,29 +38,66 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <ShelfOSLogo />
 
           <div className="order-3 w-full lg:order-none lg:mx-auto lg:w-auto">
-            <div
-              className={cn(
-                "flex h-9 items-center justify-center gap-2 rounded-full border px-3 text-xs font-semibold",
-                synced
-                  ? "border-success/30 bg-success-soft text-success"
-                  : "border-warning/30 bg-warning-soft text-warning",
-              )}
-            >
-              {synced ? (
-                <>
-                  <span className="pulse-dot h-2 w-2 rounded-full bg-success text-success" />
-                  <Cloud className="h-3.5 w-3.5" />
-                  Online (Synced)
-                </>
-              ) : (
-                <>
-                  <CloudOff className="h-3.5 w-3.5" />
-                  <span className="num">
-                    Offline Mode ({queuedCount} order{queuedCount === 1 ? "" : "s"} queued for sync)
-                  </span>
-                </>
-              )}
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className={cn(
+                    "flex h-9 w-full items-center justify-center gap-2 rounded-full border px-3 text-xs font-semibold lg:w-auto",
+                    syncing
+                      ? "border-brand/30 bg-brand-soft text-accent-foreground"
+                      : synced
+                        ? "border-success/30 bg-success-soft text-success"
+                        : "border-warning/30 bg-warning-soft text-warning",
+                  )}
+                >
+                  {syncing ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      <span className="num">Syncing {queuedCount} order{queuedCount === 1 ? "" : "s"}…</span>
+                    </>
+                  ) : synced ? (
+                    <>
+                      <span className="pulse-dot h-2 w-2 rounded-full bg-success text-success" />
+                      <Cloud className="h-3.5 w-3.5" />
+                      Online (Cloud Synced)
+                    </>
+                  ) : (
+                    <>
+                      <span className="pulse-dot h-2 w-2 rounded-full bg-warning text-warning" />
+                      <CloudOff className="h-3.5 w-3.5" />
+                      <span className="num">Offline Mode ({queuedCount} pending sync)</span>
+                    </>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="center" className="w-72">
+                <p className="text-sm font-bold text-navy">Pending sync</p>
+                <p className="num mt-0.5 text-xs text-muted-foreground">
+                  {queuedCount} order{queuedCount === 1 ? "" : "s"} · {kes(queuedValue)} queued
+                </p>
+                <div className="mt-3 max-h-40 space-y-1 overflow-y-auto">
+                  {pendingOrders.map((o) => (
+                    <div key={o.local_id} className="num flex justify-between text-xs">
+                      <span className="text-muted-foreground">{o.local_id}</span>
+                      <span className="font-semibold text-navy">{kes(o.total_amount)}</span>
+                    </div>
+                  ))}
+                  {queuedCount === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Everything on this till is backed up.
+                    </p>
+                  )}
+                </div>
+                <Button
+                  className="touch-target mt-3 w-full"
+                  disabled={!online || queuedCount === 0 || syncing}
+                  onClick={syncNow}
+                >
+                  <RefreshCw className={cn("mr-2 h-4 w-4", syncing && "animate-spin")} />
+                  Sync now
+                </Button>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="ml-auto flex items-center gap-3">
