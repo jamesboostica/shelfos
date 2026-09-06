@@ -31,34 +31,67 @@ export function RegisterPreloader({ done }: { done: boolean }) {
 
   if (hidden) return null;
 
+  const progress = ((step + 1) / STEPS.length) * 100;
+
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[60] flex flex-col items-center justify-center gap-6 bg-navy transition-opacity duration-500",
+        "fixed inset-0 z-[60] flex flex-col items-center justify-center gap-6 bg-[#0F172A] transition-opacity duration-500",
         fading ? "opacity-0" : "opacity-100",
       )}
     >
       <div className="relative">
-        <div className="flex h-24 w-24 items-center justify-center rounded-[28px] bg-navy-muted shadow-panel">
+        <div className="flex h-24 w-24 items-center justify-center rounded-[28px] bg-[#1E293B] shadow-2xl ring-1 ring-cyan-500/20">
           <svg viewBox="0 0 48 48" className="h-14 w-14" aria-hidden="true">
-            <rect x="8" y="11" width="32" height="8" rx="3" fill="#0EA5E9" />
-            <rect x="8" y="22" width="32" height="8" rx="3" fill="#FFFFFF" />
-            <rect x="8" y="33" width="20" height="6" rx="3" fill="#0EA5E9" opacity="0.6" />
+            <rect
+              x="8"
+              y="11"
+              width="32"
+              height="8"
+              rx="3"
+              fill="#0EA5E9"
+              className="animate-pulse"
+              style={{ animationDelay: "0ms" }}
+            />
+            <rect
+              x="8"
+              y="22"
+              width="32"
+              height="8"
+              rx="3"
+              fill="#38BDF8"
+              className="animate-pulse"
+              style={{ animationDelay: "150ms" }}
+            />
+            <rect
+              x="8"
+              y="33"
+              width="20"
+              height="6"
+              rx="3"
+              fill="#0EA5E9"
+              opacity="0.6"
+              className="animate-pulse"
+              style={{ animationDelay: "300ms" }}
+            />
           </svg>
         </div>
-        <span className="pulse-dot absolute -right-1 -top-1 h-4 w-4 rounded-full bg-brand text-brand" />
+        <span className="absolute -right-1 -top-1 h-4 w-4 animate-ping rounded-full bg-cyan-400 opacity-75" />
+        <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-cyan-400" />
       </div>
 
-      <p className="text-2xl font-extrabold tracking-tight text-navy-foreground">ShelfOS</p>
+      <p className="text-2xl font-extrabold tracking-tight text-slate-50">ShelfOS</p>
 
-      <div className="h-1.5 w-56 overflow-hidden rounded-full bg-navy-muted">
+      <div className="h-1.5 w-56 overflow-hidden rounded-full bg-slate-700">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-brand to-brand-bright transition-all duration-500"
-          style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
-        />
+          className="relative h-full rounded-full bg-gradient-to-r from-cyan-500 to-sky-400 transition-all duration-500"
+          style={{ width: `${progress}%` }}
+        >
+          <div className="absolute inset-0 animate-[shimmer_1.5s_infinite] rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+        </div>
       </div>
 
-      <p className="num text-xs text-navy-foreground/70">{STEPS[step]}</p>
+      <p className="font-mono text-xs text-slate-400">{STEPS[step]}</p>
     </div>
   );
 }
