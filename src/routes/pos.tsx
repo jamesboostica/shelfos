@@ -55,7 +55,7 @@ interface CartLine {
 }
 
 function PosPage() {
-  const { shift } = useShelfOS();
+  const { shift, ready } = useShelfOS();
   const products = useLiveQuery(() => getDb().products.where("is_archived").equals(0).toArray(), [], []);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All Items");
@@ -65,6 +65,12 @@ function PosPage() {
   const [reference, setReference] = useState("");
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [float, setFloat] = useState("3000");
+  const [addOpen, setAddOpen] = useState(false);
+  const [split, setSplit] = useState(false);
+  const [splitCash, setSplitCash] = useState(0);
+  const [splitMobile, setSplitMobile] = useState(0);
+  const [splitCard, setSplitCard] = useState(0);
+  const hydrated = ready && (products?.length ?? 0) > 0;
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
