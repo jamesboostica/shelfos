@@ -141,13 +141,25 @@ function PosPage() {
 
   const completeSale = async () => {
     if (cart.length === 0) return;
-    if (method === "cash" && tendered < total) {
+    if (split && shortfall > 0.01) {
+      toast.error(`${kes(shortfall)} still to be paid on this ticket`);
+      return;
+    }
+    if (!split && method === "cash" && tendered < total) {
       toast.error("Cash tendered is less than the total due");
       return;
     }
     const db = getDb();
     const localId = `SO-${Date.now().toString().slice(-8)}`;
     const createdAt = Date.now();
+    const effectiveMethod: PaymentMethod = split
+      ? splitCash >= splitMobile && splitCash >= splitCard
+        ? "cash"
+        : splitMobile >= splitCard
+          ? "mobile_money"
+          : "card"
+      : method;
+    const cashPaid = split ? splitCash : method === "cash" ? tendered : 0;
 
     await db.transaction("rw", db.products, db.orders, db.order_items, db.sync_queue, async () => {
       for (const line of cart) {
@@ -162,13 +174,17 @@ function PosPage() {
         local_id: localId,
         cashier_id: shiftCashier,
         total_amount: total,
-        payment_method: method,
+        payment_method: effectiveMethod,
         split_details: {
           subtotal: net,
           tax,
-          tendered: method === "cash" ? tendered : undefined,
-          change: method === "cash" ? change : undefined,
+          tendered: cashPaid || undefined,
+          change: change || undefined,
           reference: reference || undefined,
+          is_split: split || undefined,
+          cash: split ? splitCash : method === "cash" ? total : undefined,
+          mobile_money: split ? splitMobile : method === "mobile_money" ? total : undefined,
+          card: split ? splitCard : method === "card" ? total : undefined,
         },
         status: "completed",
         created_at: createdAt,
@@ -186,8 +202,10 @@ function PosPage() {
       );
       await db.sync_queue.add({
         entity_type: "order",
-        payload: { local_id: localId, total },
+        entity_id: localId,
+        payload: { local_id: localId, total, items: cart.length },
         status: "pending",
+        retry_count: 0,
         timestamp: createdAt,
       });
     });
@@ -200,14 +218,18 @@ function PosPage() {
       subtotal: net,
       tax,
       total,
-      payment_method: method,
-      tendered: method === "cash" ? tendered : undefined,
-      change: method === "cash" ? change : undefined,
+      payment_method: effectiveMethod,
+      tendered: cashPaid || undefined,
+      change: change || undefined,
       reference: reference || undefined,
     });
     setCart([]);
     setTendered(0);
     setReference("");
+    setSplit(false);
+    setSplitCash(0);
+    setSplitMobile(0);
+    setSplitCard(0);
   };
 
   return (
