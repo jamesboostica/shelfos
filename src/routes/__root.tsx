@@ -85,9 +85,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Fast, reliable offline Point of Sale (POS) and inventory management platform designed for physical retail, household, and general merchandise stores." },
       { name: "author", content: "ShelfOS Retail" },
       { property: "og:title", content: "ShelfOS — Physical Retail POS & Inventory Platform" },
-      { property: "og:description", content: "The offline-first operating system for modern physical retail — POS, receipts, shifts and inventory." }
+      { property: "og:description", content: "The offline-first operating system for modern physical retail — POS, receipts, shifts and inventory." },
       { name: "application-name", content: "ShelfOS" },
-      { name: "apple-mobile-web-app-title", content: "ShelfOS" },,
+
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
