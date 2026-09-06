@@ -306,7 +306,7 @@ function PosPage() {
           )}
         </div>
 
-        <div className="grid min-h-0 gap-3 overflow-y-auto pb-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid h-[calc(100vh-5rem)] gap-3 overflow-y-auto pb-2 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((p) => {
             const out = p.stock_quantity === 0;
             const low = !out && p.stock_quantity <= p.min_stock_alert;
@@ -316,19 +316,20 @@ function PosPage() {
                 disabled={out}
                 onClick={() => addToCart(p)}
                 className={cn(
-                  "flex flex-col items-start gap-2 rounded-xl border border-border bg-card p-4 text-left shadow-card transition-all",
+                  "flex h-fit flex-col items-start gap-2 rounded-xl border border-slate-300 bg-white p-4 text-left text-slate-900 shadow-sm transition-all",
                   out
                     ? "cursor-not-allowed opacity-60"
                     : "hover:-translate-y-0.5 hover:border-brand active:translate-y-0",
                 )}
               >
-                <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
                   {p.subcategory ?? p.category}
                 </span>
-                <span className="text-sm font-semibold leading-snug text-navy">{p.name}</span>
-                <span className="num text-xs text-muted-foreground">{p.sku}</span>
+                <span className="text-sm font-semibold leading-snug text-slate-900">{p.name}</span>
+                <span className="font-mono text-xs text-slate-500">{p.sku}</span>
                 <div className="mt-auto flex w-full items-end justify-between pt-2">
-                  <span className="num text-base font-bold text-navy">{kes(p.selling_price)}</span>
+                  <span className="font-mono text-base font-bold tabular-nums text-slate-900">{kes(p.selling_price)}</span>
+
                   <span
                     className={cn(
                       "num rounded-full px-2 py-0.5 text-[11px] font-bold",
