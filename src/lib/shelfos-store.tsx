@@ -9,12 +9,22 @@ import {
   type ReactNode,
 } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
+import type { User } from "@supabase/supabase-js";
 import { ensureSeeded, getDb, type Order, type Shift } from "./db";
 import { drainSyncQueue, pullRemoteProducts } from "./sync-service";
+import { supabase } from "@/integrations/supabase/client";
 
 export type Role = "cashier" | "manager";
 export const MANAGER_PIN = "1234";
 export const CASHIER_ID = "Amina W.";
+
+export interface AuthProfile {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  role: Role;
+}
 
 interface Ctx {
   role: Role;
@@ -26,6 +36,9 @@ interface Ctx {
   syncNow: () => void;
   shift: Shift | undefined;
   ready: boolean;
+  user: User | null;
+  profile: AuthProfile | null;
+  signOut: () => Promise<void>;
 }
 
 const ShelfOSContext = createContext<Ctx | null>(null);
