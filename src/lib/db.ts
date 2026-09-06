@@ -56,9 +56,11 @@ export interface Shift {
 
 export interface SyncQueueRow {
   id?: number;
-  entity_type: string;
+  entity_type: "order" | "stock_adjustment" | "shift" | string;
+  entity_id?: string;
   payload: unknown;
-  status: "pending" | "synced";
+  status: "pending" | "synced" | "failed";
+  retry_count?: number;
   timestamp: number;
 }
 
