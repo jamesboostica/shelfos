@@ -55,7 +55,7 @@ interface CartLine {
 }
 
 function PosPage() {
-  const { shift, ready } = useShelfOS();
+  const { shift, ready, role } = useShelfOS();
   const products = useLiveQuery(() => getDb().products.where("is_archived").equals(0).toArray(), [], []);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All Items");
@@ -249,10 +249,12 @@ function PosPage() {
                 className="touch-target pl-9 text-base"
               />
             </div>
-            <Button variant="outline" className="touch-target shrink-0" onClick={() => setAddOpen(true)}>
-              <PackagePlus className="mr-2 h-4 w-4" />
-              Add Item
-            </Button>
+            {role === "manager" && (
+              <Button variant="outline" className="touch-target shrink-0" onClick={() => setAddOpen(true)}>
+                <PackagePlus className="mr-2 h-4 w-4" />
+                Add Item
+              </Button>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {CATEGORY_PILLS.map((c) => (
