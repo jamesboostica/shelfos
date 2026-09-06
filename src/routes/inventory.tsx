@@ -161,6 +161,7 @@ function InventoryPage() {
       "sku",
       "name",
       "category",
+      "subcategory",
       "cost_price",
       "selling_price",
       "stock_quantity",
@@ -171,6 +172,7 @@ function InventoryPage() {
         p.sku,
         `"${p.name.replace(/"/g, '""')}"`,
         p.category,
+        p.subcategory ?? "",
         p.cost_price,
         p.selling_price,
         p.stock_quantity,
@@ -209,6 +211,7 @@ function InventoryPage() {
         name: cells[idx("name")] ?? sku,
         sku,
         category: cells[idx("category")] || CATEGORIES[0],
+        subcategory: cells[idx("subcategory")] || undefined,
         cost_price: Number(cells[idx("cost_price")]) || 0,
         selling_price: Number(cells[idx("selling_price")]) || 0,
         stock_quantity: Number(cells[idx("stock_quantity")]) || 0,
@@ -296,7 +299,12 @@ function InventoryPage() {
                 <tr key={p.id}>
                   <td className="num px-4 py-3 text-muted-foreground">{p.sku}</td>
                   <td className="px-4 py-3 font-semibold text-navy">{p.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{p.category}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {p.category}
+                    {p.subcategory && (
+                      <span className="block text-xs text-muted-foreground/70">{p.subcategory}</span>
+                    )}
+                  </td>
                   <td
                     className={cn(
                       "num px-4 py-3 text-right font-bold",
