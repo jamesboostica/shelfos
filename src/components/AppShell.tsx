@@ -146,6 +146,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
 
+            {user && (
+              <div className="flex items-center gap-2">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    className="h-8 w-8 rounded-full border border-border object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-xs font-bold text-navy-foreground">
+                    {displayName.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+                <span className="hidden max-w-32 truncate text-sm font-semibold text-navy md:inline">
+                  {displayName}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="touch-target text-muted-foreground hover:text-navy"
+                  onClick={() => void handleSignOut()}
+                  title="Log out"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="ml-1 hidden lg:inline">Log Out</span>
+                </Button>
+              </div>
+            )}
+
             <span className="num hidden text-sm font-semibold text-navy sm:inline">{now}</span>
           </div>
         </div>

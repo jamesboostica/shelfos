@@ -19,7 +19,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== "GET" || url.origin !== self.location.origin) return;
+  // OAuth redirects must always hit the network — never cache or fallback them.
+  if (url.pathname.startsWith("/~oauth")) return;
 
   event.respondWith(
     fetch(req)
