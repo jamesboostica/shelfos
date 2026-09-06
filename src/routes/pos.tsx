@@ -43,7 +43,7 @@ export const Route = createFileRoute("/pos")({
   component: PosPage,
 });
 
-const CATEGORY_PILLS = ["All Items", "Kitchenware", "Cleaning", "Storage", "Home Decor"];
+const CATEGORY_PILLS = ["All Items", ...CATEGORIES] as const;
 
 interface CartLine {
   product_id: number;
@@ -58,7 +58,8 @@ function PosPage() {
   const { shift, ready, role } = useShelfOS();
   const products = useLiveQuery(() => getDb().products.where("is_archived").equals(0).toArray(), [], []);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("All Items");
+  const [category, setCategory] = useState<string>("All Items");
+  const [subcategory, setSubcategory] = useState("All");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [method, setMethod] = useState<PaymentMethod>("cash");
   const [tendered, setTendered] = useState(0);
@@ -77,9 +78,19 @@ function PosPage() {
     return (products ?? []).filter(
       (p) =>
         (category === "All Items" || p.category === category) &&
+        (subcategory === "All" || p.subcategory === subcategory) &&
         (q === "" || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)),
     );
-  }, [products, query, category]);
+  }, [products, query, category, subcategory]);
+
+  const subPills = useMemo(() => {
+    if (category === "All Items") return [] as string[];
+    const seen = new Set<string>();
+    for (const p of products ?? []) {
+      if (p.category === category && p.subcategory) seen.add(p.subcategory);
+    }
+    return ["All", ...seen];
+  }, [products, category]);
 
   const total = cart.reduce((s, l) => s + l.unit_price * l.quantity, 0);
   const { net, tax } = taxBreakdown(total);
@@ -260,7 +271,10 @@ function PosPage() {
             {CATEGORY_PILLS.map((c) => (
               <button
                 key={c}
-                onClick={() => setCategory(c)}
+                onClick={() => {
+                  setCategory(c);
+                  setSubcategory("All");
+                }}
                 className={cn(
                   "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
                   category === c
@@ -272,6 +286,24 @@ function PosPage() {
               </button>
             ))}
           </div>
+          {subPills.length > 1 && (
+            <div className="flex flex-wrap gap-2 border-t border-border pt-2">
+              {subPills.map((sc) => (
+                <button
+                  key={sc}
+                  onClick={() => setSubcategory(sc)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    subcategory === sc
+                      ? "bg-navy text-navy-foreground"
+                      : "bg-secondary text-muted-foreground hover:bg-border",
+                  )}
+                >
+                  {sc}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="grid min-h-0 gap-3 overflow-y-auto pb-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -291,7 +323,7 @@ function PosPage() {
                 )}
               >
                 <span className="rounded-md bg-secondary px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {p.category}
+                  {p.subcategory ?? p.category}
                 </span>
                 <span className="text-sm font-semibold leading-snug text-navy">{p.name}</span>
                 <span className="num text-xs text-muted-foreground">{p.sku}</span>
