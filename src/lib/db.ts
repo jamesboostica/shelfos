@@ -26,6 +26,10 @@ export interface Order {
     reference?: string | undefined;
     tax?: number | undefined;
     subtotal?: number | undefined;
+    cash?: number | undefined;
+    mobile_money?: number | undefined;
+    card?: number | undefined;
+    is_split?: boolean | undefined;
   };
   status: "completed" | "refunded";
   created_at: number;
