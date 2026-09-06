@@ -378,16 +378,56 @@ function PosPage() {
             {(["cash", "mobile_money", "card"] as PaymentMethod[]).map((m) => (
               <Button
                 key={m}
-                variant={method === m ? "default" : "outline"}
+                variant={!split && method === m ? "default" : "outline"}
                 className="touch-target text-xs font-semibold"
-                onClick={() => setMethod(m)}
+                onClick={() => {
+                  setSplit(false);
+                  setMethod(m);
+                }}
               >
                 {m === "cash" ? "Cash" : m === "mobile_money" ? "Mobile Money" : "Card"}
               </Button>
             ))}
           </div>
 
-          {method === "mobile_money" && (
+          <Button
+            variant={split ? "default" : "outline"}
+            className="touch-target w-full text-xs font-semibold"
+            onClick={() => setSplit((s) => !s)}
+          >
+            <SplitSquareHorizontal className="mr-2 h-4 w-4" />
+            {split ? "Split payment on" : "Split across tenders"}
+          </Button>
+
+          {split && (
+            <div className="space-y-2 rounded-lg border border-border bg-card p-3">
+              {(
+                [
+                  ["Cash", splitCash, setSplitCash],
+                  ["Mobile Money", splitMobile, setSplitMobile],
+                  ["Card", splitCard, setSplitCard],
+                ] as const
+              ).map(([label, value, setter]) => (
+                <div key={label} className="flex items-center gap-2">
+                  <Label className="w-28 text-xs text-muted-foreground">{label} (KES)</Label>
+                  <Input
+                    inputMode="decimal"
+                    value={value || ""}
+                    onChange={(e) => setter(Number(e.target.value) || 0)}
+                    className="touch-target num"
+                  />
+                </div>
+              ))}
+              <div className="num flex justify-between text-xs font-semibold">
+                <span className="text-muted-foreground">Tendered {kes(splitTotal)}</span>
+                <span className={shortfall > 0 ? "text-danger" : "text-success"}>
+                  {shortfall > 0 ? `${kes(shortfall)} remaining` : `Change ${kes(change)}`}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {(split || method === "mobile_money") && (
             <Input
               value={reference}
               onChange={(e) => setReference(e.target.value)}
@@ -396,10 +436,10 @@ function PosPage() {
             />
           )}
 
-          {method === "cash" && (
+          {!split && method === "cash" && (
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
-                {[500, 1000, 2000].map((v) => (
+                {[100, 500, 1000, 2000].map((v) => (
                   <Button
                     key={v}
                     variant="outline"
