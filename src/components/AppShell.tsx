@@ -17,7 +17,8 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole, online, queuedCount, shift } = useShelfOS();
+  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift } =
+    useShelfOS();
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
   const { pathname } = useLocation();
