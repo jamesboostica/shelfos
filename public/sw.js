@@ -1,4 +1,4 @@
-const CACHE = "shelfos-shell-v1";
+const CACHE = "shelfos-shell-v2";
 const SHELL = ["/", "/pos", "/inventory", "/shifts", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
