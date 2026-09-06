@@ -16,7 +16,7 @@ import {
 import { ReceiptModal } from "@/components/ReceiptModal";
 import { RegisterPreloader } from "@/components/pos/RegisterPreloader";
 import { QuickAddProductDrawer } from "@/components/QuickAddProductDrawer";
-import { CATEGORIES, getDb, type PaymentMethod, type Product } from "@/lib/db";
+import { CATEGORIES, ensureSeeded, getDb, type PaymentMethod, type Product } from "@/lib/db";
 import { amountOnly, kes, taxBreakdown } from "@/lib/format";
 import type { ReceiptData } from "@/lib/receipt";
 import { useShelfOS } from "@/lib/shelfos-store";
