@@ -21,11 +21,11 @@ export interface Order {
   total_amount: number;
   payment_method: PaymentMethod;
   split_details: {
-    tendered?: number;
-    change?: number;
-    reference?: string;
-    tax?: number;
-    subtotal?: number;
+    tendered?: number | undefined;
+    change?: number | undefined;
+    reference?: string | undefined;
+    tax?: number | undefined;
+    subtotal?: number | undefined;
   };
   status: "completed" | "refunded";
   created_at: number;
