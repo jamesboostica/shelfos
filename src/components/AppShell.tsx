@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { BarChart3, CloudOff, Cloud, Package, ScanLine, Wallet, Lock } from "lucide-react";
+import { BarChart3, CloudOff, Cloud, Package, RefreshCw, ScanLine, Wallet, Lock } from "lucide-react";
 import { ShelfOSLogo } from "@/components/brand/Logo";
 import { PinDialog } from "@/components/PinDialog";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useShelfOS } from "@/lib/shelfos-store";
-import { clockTime } from "@/lib/format";
+import { clockTime, kes } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const NAV = [
