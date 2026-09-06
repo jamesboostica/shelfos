@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { RegisterPreloader } from "@/components/pos/RegisterPreloader";
 
 /** IndexedDB only exists in the browser: render the register shell after hydration. */
 export function ClientGate({ children }: { children: ReactNode }) {
@@ -6,11 +7,7 @@ export function ClientGate({ children }: { children: ReactNode }) {
   useEffect(() => setMounted(true), []);
 
   if (!mounted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="num text-sm text-muted-foreground">Loading register…</p>
-      </div>
-    );
+    return <RegisterPreloader done={false} />;
   }
   return <>{children}</>;
 }
