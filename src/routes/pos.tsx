@@ -495,6 +495,8 @@ function PosPage() {
         </div>
       </aside>
 
+      <RegisterPreloader done={hydrated} />
+      <QuickAddProductDrawer open={addOpen} onOpenChange={setAddOpen} />
       <ReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
 
       <Dialog open={!shift}>
