@@ -159,8 +159,11 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       syncNow: () => void runSync(),
       shift,
       ready,
+      user,
+      profile,
+      signOut,
     }),
-    [role, online, syncing, queuedCount, pendingOrders, runSync, shift, ready],
+    [role, online, syncing, queuedCount, pendingOrders, runSync, shift, ready, user, profile, signOut],
   );
 
   return <ShelfOSContext.Provider value={value}>{children}</ShelfOSContext.Provider>;
