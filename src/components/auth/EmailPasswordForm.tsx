@@ -10,7 +10,6 @@ export function EmailPasswordForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sentTo, setSentTo] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,20 +24,13 @@ export function EmailPasswordForm() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: trimmed,
           password,
           options: { emailRedirectTo: `${window.location.origin}/login` },
         });
         if (error) throw error;
-        if (data.session) {
-          toast.success("Account created");
-        } else {
-          setSentTo(trimmed);
-          toast.success("Confirm your email", {
-            description: "We sent you a confirmation link. Open it to finish creating your account.",
-          });
-        }
+        toast.success("Account created — you're signed in");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: trimmed,
@@ -55,29 +47,6 @@ export function EmailPasswordForm() {
       setLoading(false);
     }
   };
-
-  if (sentTo) {
-    return (
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
-        <p className="text-sm font-semibold text-slate-900">Check your inbox</p>
-        <p className="mt-1 text-xs text-slate-500">
-          We sent a confirmation link to <span className="font-mono">{sentTo}</span>. Open it, then
-          come back and sign in.
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            setSentTo(null);
-            setMode("signin");
-            setPassword("");
-          }}
-          className="mt-4 h-11 w-full rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-100"
-        >
-          Back to sign in
-        </button>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={submit} className="space-y-3">
