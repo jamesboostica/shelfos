@@ -148,7 +148,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
 
-            {user && (
+            {user ? (
               <div className="flex items-center gap-2">
                 {avatarUrl ? (
                   <img
@@ -176,6 +176,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <span className="ml-1 hidden lg:inline">Log Out</span>
                 </Button>
               </div>
+            ) : (
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="touch-target gap-1.5 text-muted-foreground hover:text-navy"
+                title="Sign in"
+              >
+                <Link to="/login">
+                  <User className="h-4 w-4" />
+                  <span className="hidden lg:inline">Sign in</span>
+                </Link>
+              </Button>
             )}
 
             <span className="num hidden text-sm font-semibold text-navy sm:inline">{now}</span>
