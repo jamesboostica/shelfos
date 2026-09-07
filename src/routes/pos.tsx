@@ -48,6 +48,7 @@ const CATEGORY_PILLS = ["All Items", ...CATEGORIES] as const;
 interface CartLine {
   product_id: number;
   name: string;
+  sku: string;
   unit_price: number;
   unit_cost: number;
   quantity: number;
