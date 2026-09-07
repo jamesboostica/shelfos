@@ -88,6 +88,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [hasCachedSession, setHasCachedSession] = useState(hadSessionHint);
   const [dailyUnlocked, setDailyUnlocked] = useState(false);
   const busy = useRef(false);
 
