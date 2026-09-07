@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { BarChart3, CloudOff, Cloud, LogOut, Package, RefreshCw, ScanLine, User, Wallet, Lock } from "lucide-react";
 import { ShelfOSLogo } from "@/components/brand/Logo";
 import { PinDialog } from "@/components/PinDialog";
+import { RegisterPreloader } from "@/components/pos/RegisterPreloader";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useShelfOS } from "@/lib/shelfos-store";
@@ -17,7 +18,7 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, signOut } =
+  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, signOut } =
     useShelfOS();
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
@@ -29,11 +30,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => clearInterval(t);
   }, []);
 
+  // Route guard: everything except /login requires a signed-in user.
+  useEffect(() => {
+    if (pathname !== "/login" && authChecked && !user) {
+      void navigate({ to: "/login", replace: true });
+    }
+  }, [pathname, authChecked, user, navigate]);
+
   const synced = online && queuedCount === 0;
   const queuedValue = pendingOrders.reduce((s, o) => s + o.total_amount, 0);
 
   // The login screen renders bare — no register chrome around it.
   if (pathname === "/login") return <>{children}</>;
+
+  // While the session is being verified (or a signed-out user is being sent
+  // to /login) hold the register behind the preloader.
+  if (!authChecked || !user) return <RegisterPreloader done={false} />;
 
   const displayName =
     profile?.full_name || (user?.user_metadata?.["full_name"] as string | undefined) || user?.email || "";
