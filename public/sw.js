@@ -1,4 +1,4 @@
-const CACHE = "shelfos-shell-v2";
+const CACHE = "shelfos-shell-v3";
 const SHELL = ["/", "/pos", "/inventory", "/shifts", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -23,6 +23,13 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET" || url.origin !== self.location.origin) return;
   // OAuth redirects must always hit the network — never cache or fallback them.
   if (url.pathname.startsWith("/~oauth")) return;
+  // Auth screens and API calls always go straight to the network.
+  if (
+    url.pathname.startsWith("/api") ||
+    url.pathname === "/login" ||
+    url.pathname === "/reset-password"
+  )
+    return;
 
   event.respondWith(
     fetch(req)
