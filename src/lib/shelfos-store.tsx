@@ -102,21 +102,40 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Auth listener: keep the signed-in user and their profile role in sync.
+  // A session older than 24h is revoked so staff log in at least once a day.
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
-        setUser(data.user);
-        void loadProfile(data.user.id);
+        if (loginIsStale()) {
+          void supabase.auth.signOut();
+          localStorage.removeItem(LAST_LOGIN_KEY);
+        } else {
+          setUser(data.user);
+          void loadProfile(data.user.id);
+        }
       }
+      setAuthChecked(true);
     });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       const u = session?.user ?? null;
+      if (event === "SIGNED_IN" && u) {
+        if (loginIsStale()) {
+          void supabase.auth.signOut();
+          localStorage.removeItem(LAST_LOGIN_KEY);
+          setUser(null);
+          setProfile(null);
+          setAuthChecked(true);
+          return;
+        }
+        localStorage.setItem(LAST_LOGIN_KEY, String(Date.now()));
+      }
       setUser(u);
       if (u) void loadProfile(u.id);
       else setProfile(null);
+      setAuthChecked(true);
     });
     return () => subscription.unsubscribe();
   }, [loadProfile]);
@@ -127,6 +146,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setRoleState("cashier");
     localStorage.setItem("shelfos:role", "cashier");
+    localStorage.removeItem(LAST_LOGIN_KEY);
   }, []);
 
   useEffect(() => {
