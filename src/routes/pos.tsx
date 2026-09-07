@@ -128,6 +128,7 @@ function PosPage() {
         {
           product_id: p.id!,
           name: p.name,
+          sku: p.sku,
           unit_price: p.selling_price,
           unit_cost: p.cost_price,
           quantity: 1,
