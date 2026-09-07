@@ -138,6 +138,28 @@ function RootComponent() {
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
+    const host = window.location.hostname;
+    const blocked =
+      !import.meta.env.PROD ||
+      window.self !== window.top ||
+      host.startsWith("id-preview--") ||
+      host.startsWith("preview--") ||
+      host === "lovableproject.com" ||
+      host.endsWith(".lovableproject.com") ||
+      host === "lovableproject-dev.com" ||
+      host.endsWith(".lovableproject-dev.com") ||
+      host === "beta.lovable.dev" ||
+      host.endsWith(".beta.lovable.dev") ||
+      new URLSearchParams(window.location.search).has("sw-off");
+
+    if (blocked) {
+      void navigator.serviceWorker.getRegistrations().then((regs) => {
+        for (const reg of regs) {
+          if (reg.active?.scriptURL.endsWith("/sw.js")) void reg.unregister();
+        }
+      });
+      return;
+    }
     void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
   }, []);
 
