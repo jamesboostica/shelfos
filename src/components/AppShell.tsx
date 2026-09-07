@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { BarChart3, CloudOff, Cloud, LogOut, Package, RefreshCw, ScanLine, Wallet, Lock } from "lucide-react";
+import { BarChart3, CloudOff, Cloud, LogOut, Package, RefreshCw, ScanLine, User, Wallet, Lock } from "lucide-react";
 import { ShelfOSLogo } from "@/components/brand/Logo";
 import { PinDialog } from "@/components/PinDialog";
 import { Button } from "@/components/ui/button";
