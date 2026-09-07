@@ -14,15 +14,15 @@ export function RegisterPreloader({ done }: { done: boolean }) {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    const t = setInterval(() => setStep((s) => Math.min(STEPS.length - 1, s + 1)), 420);
+    const t = setInterval(() => setStep((s) => Math.min(STEPS.length - 1, s + 1)), 180);
     return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
     if (!done) return;
     setStep(STEPS.length - 1);
-    const a = setTimeout(() => setFading(true), 250);
-    const b = setTimeout(() => setHidden(true), 750);
+    const a = setTimeout(() => setFading(true), 100);
+    const b = setTimeout(() => setHidden(true), 400);
     return () => {
       clearTimeout(a);
       clearTimeout(b);

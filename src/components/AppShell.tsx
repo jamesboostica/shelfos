@@ -4,6 +4,7 @@ import { BarChart3, CloudOff, Cloud, LogOut, Package, RefreshCw, ScanLine, User,
 import { ShelfOSLogo } from "@/components/brand/Logo";
 import { PinDialog } from "@/components/PinDialog";
 import { RegisterPreloader } from "@/components/pos/RegisterPreloader";
+import { DailyPinLock } from "@/components/auth/DailyPinLock";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useShelfOS } from "@/lib/shelfos-store";
@@ -18,7 +19,7 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, signOut } =
+  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, signOut, dailyUnlocked, unlockDaily } =
     useShelfOS();
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
