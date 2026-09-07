@@ -30,18 +30,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => clearInterval(t);
   }, []);
 
-  // Route guard: everything except /login requires a signed-in user.
+  // Public routes that never require a signed-in user.
+  const isPublicRoute = pathname === "/login" || pathname === "/reset-password";
+
+  // Route guard: everything except public routes requires a signed-in user.
   useEffect(() => {
-    if (pathname !== "/login" && authChecked && !user) {
+    if (!isPublicRoute && authChecked && !user) {
       void navigate({ to: "/login", replace: true });
     }
-  }, [pathname, authChecked, user, navigate]);
+  }, [isPublicRoute, authChecked, user, navigate]);
 
   const synced = online && queuedCount === 0;
   const queuedValue = pendingOrders.reduce((s, o) => s + o.total_amount, 0);
 
-  // The login screen renders bare — no register chrome around it.
-  if (pathname === "/login") return <>{children}</>;
+  // Public screens render bare — no register chrome around them.
+  if (isPublicRoute) return <>{children}</>;
 
   // While the session is being verified (or a signed-out user is being sent
   // to /login) hold the register behind the preloader.
