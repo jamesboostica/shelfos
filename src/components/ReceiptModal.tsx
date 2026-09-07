@@ -88,8 +88,30 @@ export function ReceiptModal({
                 </div>
                 <div className="flex justify-between pt-1">
                   <span>Paid via</span>
-                  <span>{paymentLabel(receipt.payment_method)}</span>
+                  <span>{receipt.is_split ? "Split payment" : paymentLabel(receipt.payment_method)}</span>
                 </div>
+                {receipt.is_split && (
+                  <>
+                    {!!receipt.cash && (
+                      <div className="flex justify-between">
+                        <span>· Cash</span>
+                        <span>{amountOnly(receipt.cash)}</span>
+                      </div>
+                    )}
+                    {!!receipt.mobile_money && (
+                      <div className="flex justify-between">
+                        <span>· Mobile Money</span>
+                        <span>{amountOnly(receipt.mobile_money)}</span>
+                      </div>
+                    )}
+                    {!!receipt.card && (
+                      <div className="flex justify-between">
+                        <span>· Card</span>
+                        <span>{amountOnly(receipt.card)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
                 {receipt.payment_method === "cash" && receipt.tendered != null && (
                   <>
                     <div className="flex justify-between">
