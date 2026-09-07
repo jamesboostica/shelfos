@@ -40,6 +40,8 @@ interface Ctx {
   user: User | null;
   profile: AuthProfile | null;
   authChecked: boolean;
+  /** Synchronous hint that this device previously signed in (pre-verification). */
+  hasCachedSession: boolean;
   signOut: () => Promise<void>;
   /** True once today's 4-digit access PIN has been entered on this device. */
   dailyUnlocked: boolean;
