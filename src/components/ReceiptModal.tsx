@@ -46,6 +46,12 @@ export function ReceiptModal({
                   <span>Cashier</span>
                   <span>{receipt.cashier_id}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span>Items / Units</span>
+                  <span>
+                    {receipt.items.length} / {receipt.items.reduce((s, i) => s + i.quantity, 0)}
+                  </span>
+                </div>
               </div>
 
               <div className="my-3 border-t border-dashed border-border" />
