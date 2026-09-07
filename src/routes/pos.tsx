@@ -267,6 +267,190 @@ function PosPage() {
     setSplitCard(0);
   };
 
+  const ticketBody = (
+    <>
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <h2 className="font-bold text-navy">Active ticket</h2>
+        <span className="num text-xs text-muted-foreground">
+          {cart.reduce((s, l) => s + l.quantity, 0)} items
+        </span>
+      </div>
+
+      <div className="min-h-[120px] flex-1 overflow-y-auto divide-y divide-border">
+        {cart.length === 0 && (
+          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+            Tap products to start a sale.
+          </p>
+        )}
+        {cart.map((l) => (
+          <div key={l.product_id} className="flex items-center gap-2 px-4 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-navy">{l.name}</p>
+              <p className="num text-xs text-muted-foreground">{kes(l.unit_price)} each</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => setQty(l.product_id, -1)}>
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="num w-8 text-center text-sm font-bold">{l.quantity}</span>
+              <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => setQty(l.product_id, 1)}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <span className="num w-24 text-right text-sm font-bold text-navy">
+              {amountOnly(l.unit_price * l.quantity)}
+            </span>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-10 w-10 text-danger"
+              onClick={() => setQty(l.product_id, -l.quantity)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-3 border-t border-border bg-background/60 p-4">
+        <div className="num space-y-1 text-sm">
+          <div className="flex justify-between text-muted-foreground">
+            <span>Subtotal (excl. VAT)</span>
+            <span>{amountOnly(net)}</span>
+          </div>
+          <div className="flex justify-between text-muted-foreground">
+            <span>VAT 16% (inclusive)</span>
+            <span>{amountOnly(tax)}</span>
+          </div>
+          <div className="flex justify-between text-lg font-bold text-navy">
+            <span>Total</span>
+            <span>{kes(total)}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {(["cash", "mobile_money", "card"] as PaymentMethod[]).map((m) => (
+            <Button
+              key={m}
+              variant={!split && method === m ? "default" : "outline"}
+              className="touch-target text-xs font-semibold"
+              onClick={() => {
+                setSplit(false);
+                setMethod(m);
+              }}
+            >
+              {m === "cash" ? "Cash" : m === "mobile_money" ? "Mobile Money" : "Card"}
+            </Button>
+          ))}
+        </div>
+
+        <Button
+          variant={split ? "default" : "outline"}
+          className="touch-target w-full text-xs font-semibold"
+          onClick={() => setSplit((s) => !s)}
+        >
+          <SplitSquareHorizontal className="mr-2 h-4 w-4" />
+          {split ? "Split payment on" : "Split across tenders"}
+        </Button>
+
+        {split && (
+          <div className="space-y-2 rounded-lg border border-border bg-card p-3">
+            {(
+              [
+                ["Cash", splitCash, setSplitCash],
+                ["Mobile Money", splitMobile, setSplitMobile],
+                ["Card", splitCard, setSplitCard],
+              ] as const
+            ).map(([label, value, setter]) => (
+              <div key={label} className="flex items-center gap-2">
+                <Label className="w-28 text-xs text-muted-foreground">{label} (KES)</Label>
+                <Input
+                  inputMode="decimal"
+                  value={value || ""}
+                  onChange={(e) => setter(Number(e.target.value) || 0)}
+                  className="touch-target num"
+                />
+              </div>
+            ))}
+            <div className="num flex justify-between text-xs font-semibold">
+              <span className="text-muted-foreground">Tendered {kes(splitTotal)}</span>
+              <span className={shortfall > 0 ? "text-danger" : "text-success"}>
+                {shortfall > 0 ? `${kes(shortfall)} remaining` : `Change ${kes(change)}`}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {(split || method === "mobile_money") && (
+          <Input
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            placeholder="M-Pesa transaction reference"
+            className="touch-target num"
+          />
+        )}
+
+        {!split && method === "cash" && (
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              {[100, 500, 1000, 2000].map((v) => (
+                <Button
+                  key={v}
+                  variant="outline"
+                  className="touch-target num flex-1"
+                  onClick={() => setTendered((t) => t + v)}
+                >
+                  +{v}
+                </Button>
+              ))}
+              <Button variant="outline" className="touch-target flex-1" onClick={() => setTendered(total)}>
+                Exact
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-muted-foreground">Cash tendered</Label>
+                <Input
+                  inputMode="decimal"
+                  value={tendered || ""}
+                  onChange={(e) => setTendered(Number(e.target.value) || 0)}
+                  className="touch-target num"
+                />
+              </div>
+              <div className="rounded-lg border border-border bg-card p-2">
+                <p className="text-xs text-muted-foreground">Change due</p>
+                <p className="num text-lg font-bold text-success">{kes(change)}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="touch-target flex-1"
+            onClick={() => {
+              setCart([]);
+              setTendered(0);
+            }}
+          >
+            Clear ticket
+          </Button>
+          <Button
+            className="touch-target flex-[2] text-base font-bold"
+            disabled={cart.length === 0}
+            onClick={async () => {
+              await completeSale();
+              setTicketOpen(false);
+            }}
+          >
+            Complete Sale ({kes(total)})
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <>
       {hydrated && (
