@@ -73,15 +73,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-card">
-        <div className="flex flex-wrap items-center gap-3 px-4 py-2.5 lg:px-6">
+        <div className="flex items-center gap-2 px-3 py-2 lg:gap-3 lg:px-6 lg:py-2.5">
           <ShelfOSLogo />
 
-          <div className="order-3 w-full lg:order-none lg:mx-auto lg:w-auto">
+          <div className="lg:mx-auto">
             <Popover>
               <PopoverTrigger asChild>
                 <button
+                  aria-label="Sync status"
                   className={cn(
-                    "flex h-9 w-full items-center justify-center gap-2 rounded-full border px-3 text-xs font-semibold lg:w-auto",
+                    "flex h-10 touch-target items-center justify-center gap-2 rounded-full border px-3 text-xs font-semibold lg:h-9",
                     syncing
                       ? "border-brand/30 bg-brand-soft text-accent-foreground"
                       : synced
@@ -92,19 +93,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {syncing ? (
                     <>
                       <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      <span className="num">Syncing {queuedCount} order{queuedCount === 1 ? "" : "s"}…</span>
+                      <span className="num lg:hidden">{queuedCount}</span>
+                      <span className="num hidden lg:inline">
+                        Syncing {queuedCount} order{queuedCount === 1 ? "" : "s"}…
+                      </span>
                     </>
                   ) : synced ? (
                     <>
                       <span className="pulse-dot h-2 w-2 rounded-full bg-success text-success" />
                       <Cloud className="h-3.5 w-3.5" />
-                      Online (Cloud Synced)
+                      <span className="hidden lg:inline">Online (Cloud Synced)</span>
                     </>
                   ) : (
                     <>
                       <span className="pulse-dot h-2 w-2 rounded-full bg-warning text-warning" />
                       <CloudOff className="h-3.5 w-3.5" />
-                      <span className="num">Offline Mode ({queuedCount} pending sync)</span>
+                      <span className="num lg:hidden">{queuedCount}</span>
+                      <span className="num hidden lg:inline">
+                        Offline Mode ({queuedCount} pending sync)
+                      </span>
                     </>
                   )}
                 </button>
