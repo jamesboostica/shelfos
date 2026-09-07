@@ -205,7 +205,15 @@ export const CATEGORIES = [
 /** Bump when SEED_PRODUCTS changes so existing tills refresh their catalogue. */
 const CATALOG_VERSION = "2";
 
-export async function ensureSeeded() {
+let seedPromise: Promise<void> | null = null;
+
+/** Seeding runs once per page load, no matter how many callers ask. */
+export function ensureSeeded(): Promise<void> {
+  seedPromise ??= runSeed();
+  return seedPromise;
+}
+
+async function runSeed() {
   const db = getDb();
   const count = await db.products.count();
   const version = typeof localStorage !== "undefined" ? localStorage.getItem("shelfos:catalog") : CATALOG_VERSION;

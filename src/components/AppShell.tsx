@@ -4,6 +4,7 @@ import { BarChart3, CloudOff, Cloud, LogOut, Package, RefreshCw, ScanLine, User,
 import { ShelfOSLogo } from "@/components/brand/Logo";
 import { PinDialog } from "@/components/PinDialog";
 import { RegisterPreloader } from "@/components/pos/RegisterPreloader";
+import { DailyPinLock } from "@/components/auth/DailyPinLock";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useShelfOS } from "@/lib/shelfos-store";
@@ -18,7 +19,7 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, signOut } =
+  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, signOut, dailyUnlocked, unlockDaily } =
     useShelfOS();
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
@@ -54,6 +55,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     profile?.full_name || (user?.user_metadata?.["full_name"] as string | undefined) || user?.email || "";
   const avatarUrl =
     profile?.avatar_url || (user?.user_metadata?.["avatar_url"] as string | undefined);
+
+  // Signed in, but the till still needs today's access PIN.
+  if (!dailyUnlocked) {
+    return <DailyPinLock name={profile?.full_name ?? undefined} onUnlock={unlockDaily} />;
+  }
 
   const handleSignOut = async () => {
     await signOut();
