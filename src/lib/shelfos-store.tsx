@@ -51,6 +51,19 @@ interface Ctx {
 const PIN_DAY_KEY = "shelfos:pin-day";
 export const ACCESS_PIN = CASHIER_PIN;
 
+// Cheap synchronous hint that this device has a signed-in session, so the
+// register can open instantly while the real session is verified in the
+// background (the preview brokers storage over postMessage, which is slow).
+const HAD_SESSION_KEY = "shelfos:had-session";
+
+function hadSessionHint(): boolean {
+  try {
+    return localStorage.getItem(HAD_SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 function today(): string {
   return new Date().toDateString();
 }
