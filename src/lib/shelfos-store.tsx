@@ -139,16 +139,26 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       }
       setHasCachedSession(signedIn);
     };
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) {
-        setUser(data.session.user);
-        markSession(true);
-        void loadProfile(data.session.user.id);
-      } else {
-        markSession(false);
-      }
-      setAuthChecked(true);
-    });
+    // Offline-first: when there's no network, never wait on the session
+    // check — open from the cached-session hint and reconcile when back online.
+    const offline = typeof navigator !== "undefined" && !navigator.onLine;
+    if (offline) setAuthChecked(true);
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (data.session?.user) {
+          setUser(data.session.user);
+          markSession(true);
+          void loadProfile(data.session.user.id).catch(() => {});
+        } else if (!offline) {
+          markSession(false);
+        }
+        setAuthChecked(true);
+      })
+      .catch(() => {
+        // Network/storage failure — keep the cached-session decision.
+        setAuthChecked(true);
+      });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
