@@ -15,7 +15,7 @@ import { drainSyncQueue, pullRemoteProducts } from "./sync-service";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Role = "cashier" | "manager";
-export const MANAGER_PIN = "1234";
+export const MANAGER_PIN = "4875";
 export const CASHIER_ID = "Amina W.";
 
 export interface AuthProfile {
