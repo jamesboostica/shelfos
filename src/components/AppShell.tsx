@@ -146,7 +146,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Popover>
           </div>
 
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 lg:gap-3">
             <span
               className={cn(
                 "hidden rounded-full border px-3 py-1.5 text-xs font-semibold sm:inline-flex",
@@ -162,7 +162,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <button
                 onClick={() => setRole("cashier")}
                 className={cn(
-                  "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                  "rounded-full px-2.5 py-1.5 text-xs font-semibold transition-colors lg:px-3",
                   role === "cashier" ? "bg-navy text-navy-foreground" : "text-muted-foreground",
                 )}
               >
@@ -171,7 +171,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <button
                 onClick={() => (role === "manager" ? undefined : setPinOpen(true))}
                 className={cn(
-                  "flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                  "flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-colors lg:px-3",
                   role === "manager" ? "bg-brand text-brand-foreground" : "text-muted-foreground",
                 )}
               >
@@ -181,33 +181,57 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             {user || hasCachedSession ? (
-              <div className="flex items-center gap-2">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt={displayName}
-                    className="h-8 w-8 rounded-full border border-border object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-xs font-bold text-navy-foreground">
-                    {displayName.slice(0, 1).toUpperCase()}
-                  </span>
-                )}
-                <span className="hidden max-w-32 truncate text-sm font-semibold text-navy md:inline">
-                  {displayName}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="touch-target text-muted-foreground hover:text-navy"
-                  onClick={() => void handleSignOut()}
-                  title="Log out"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="ml-1 hidden lg:inline">Log Out</span>
-                </Button>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    aria-label={`Account — ${displayName}`}
+                    className="touch-target flex items-center justify-center rounded-full"
+                  >
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={displayName}
+                        className="h-9 w-9 rounded-full border border-border object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-xs font-bold text-navy-foreground">
+                        {displayName.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-56">
+                  <div className="flex items-center gap-3">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={displayName}
+                        className="h-10 w-10 rounded-full border border-border object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy text-sm font-bold text-navy-foreground">
+                        {displayName.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-navy">{displayName}</p>
+                      <p className="truncate text-xs capitalize text-muted-foreground">
+                        {role} · {user?.email ?? "This device"}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="touch-target mt-3 w-full"
+                    onClick={() => void handleSignOut()}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log Out
+                  </Button>
+                </PopoverContent>
+              </Popover>
             ) : (
               <Button
                 asChild
