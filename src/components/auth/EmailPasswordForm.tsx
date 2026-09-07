@@ -16,6 +16,29 @@ export function EmailPasswordForm() {
     e.preventDefault();
     if (loading) return;
     const trimmed = email.trim();
+    if (mode === "reset") {
+      if (!trimmed) {
+        toast.error("Enter your email", {
+          description: "We need your email to send the reset link.",
+        });
+        return;
+      }
+      setLoading(true);
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        setResetSent(true);
+      } catch (err) {
+        toast.error("Could not send reset link", {
+          description: err instanceof Error ? err.message : "Please try again.",
+        });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
     if (!trimmed || password.length < 6) {
       toast.error("Check your details", {
         description: "Enter your email and a password of at least 6 characters.",
