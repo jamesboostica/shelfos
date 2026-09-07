@@ -130,10 +130,22 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   // Auth listener: keep the signed-in user and their profile role in sync.
   useEffect(() => {
     setDailyUnlocked(pinUnlockedToday());
+    const markSession = (signedIn: boolean) => {
+      try {
+        if (signedIn) localStorage.setItem(HAD_SESSION_KEY, "1");
+        else localStorage.removeItem(HAD_SESSION_KEY);
+      } catch {
+        /* storage unavailable */
+      }
+      setHasCachedSession(signedIn);
+    };
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
         setUser(data.session.user);
+        markSession(true);
         void loadProfile(data.session.user.id);
+      } else {
+        markSession(false);
       }
       setAuthChecked(true);
     });
@@ -143,6 +155,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       const u = session?.user ?? null;
       if (event === "SIGNED_IN") {
+        markSession(true);
         // Signing in counts as today's access check.
         try {
           localStorage.setItem(PIN_DAY_KEY, today());
@@ -150,6 +163,8 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
           /* storage unavailable */
         }
         setDailyUnlocked(true);
+      } else if (event === "SIGNED_OUT") {
+        markSession(false);
       }
       setUser(u);
       if (u) void loadProfile(u.id);
@@ -166,6 +181,8 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     setRoleState("cashier");
     localStorage.setItem("shelfos:role", "cashier");
     localStorage.removeItem(PIN_DAY_KEY);
+    localStorage.removeItem(HAD_SESSION_KEY);
+    setHasCachedSession(false);
     setDailyUnlocked(false);
   }, []);
 
