@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Minus, PackagePlus, Plus, Search, SplitSquareHorizontal, Trash2, Wallet } from "lucide-react";
+import { Minus, PackagePlus, Plus, Search, ShoppingCart, SplitSquareHorizontal, Trash2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ReceiptModal } from "@/components/ReceiptModal";
 import { RegisterPreloader } from "@/components/pos/RegisterPreloader";
 import { QuickAddProductDrawer } from "@/components/QuickAddProductDrawer";
@@ -73,6 +74,7 @@ function PosPage() {
   const [splitMobile, setSplitMobile] = useState(0);
   const [splitCard, setSplitCard] = useState(0);
   const [dbReady, setDbReady] = useState(false);
+  const [ticketOpen, setTicketOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -114,6 +116,7 @@ function PosPage() {
 
   const addToCart = (p: Product) => {
     if (p.stock_quantity <= 0) return;
+    if (typeof window !== "undefined" && window.innerWidth < 1024) setTicketOpen(true);
     setCart((prev) => {
       const existing = prev.find((l) => l.product_id === p.id);
       if (existing) {
@@ -516,7 +519,7 @@ function PosPage() {
           )}
         </div>
 
-        <div className="grid h-[calc(100vh-5rem)] gap-3 overflow-y-auto pb-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid h-[calc(100vh-5rem)] gap-3 overflow-y-auto pb-24 lg:pb-2 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((p) => {
             const out = p.stock_quantity === 0;
             const low = !out && p.stock_quantity <= p.min_stock_alert;
