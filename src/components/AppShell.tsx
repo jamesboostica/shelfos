@@ -74,7 +74,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-card">
         <div className="flex items-center gap-2 px-3 py-2 lg:gap-3 lg:px-6 lg:py-2.5">
-          <ShelfOSLogo />
+          <span className="lg:hidden">
+            <ShelfOSLogo compact />
+          </span>
+          <span className="hidden lg:block">
+            <ShelfOSLogo />
+          </span>
 
           <div className="lg:mx-auto">
             <Popover>
