@@ -40,18 +40,26 @@ interface Ctx {
   profile: AuthProfile | null;
   authChecked: boolean;
   signOut: () => Promise<void>;
+  /** True once today's 4-digit access PIN has been entered on this device. */
+  dailyUnlocked: boolean;
+  unlockDaily: () => void;
 }
 
-// Access rule: a signed-in session is valid for at most 24 hours — staff must
-// log in at least once a day before the register unlocks.
-const LAST_LOGIN_KEY = "shelfos:last-login";
-const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000;
+// Access rule: the signed-in session persists indefinitely — staff stay logged
+// in. Once per calendar day the register asks for the 4-digit access PIN.
+const PIN_DAY_KEY = "shelfos:pin-day";
+export const ACCESS_PIN = MANAGER_PIN;
 
-function loginIsStale(): boolean {
-  const raw = localStorage.getItem(LAST_LOGIN_KEY);
-  if (!raw) return true;
-  const at = Number(raw);
-  return !Number.isFinite(at) || Date.now() - at > MAX_SESSION_AGE_MS;
+function today(): string {
+  return new Date().toDateString();
+}
+
+function pinUnlockedToday(): boolean {
+  try {
+    return localStorage.getItem(PIN_DAY_KEY) === today();
+  } catch {
+    return false;
+  }
 }
 
 const ShelfOSContext = createContext<Ctx | null>(null);
@@ -64,6 +72,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [dailyUnlocked, setDailyUnlocked] = useState(false);
   const busy = useRef(false);
 
   const pendingOrders = useLiveQuery(
@@ -102,17 +111,12 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Auth listener: keep the signed-in user and their profile role in sync.
-  // A session older than 24h is revoked so staff log in at least once a day.
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        if (loginIsStale()) {
-          void supabase.auth.signOut();
-          localStorage.removeItem(LAST_LOGIN_KEY);
-        } else {
-          setUser(data.user);
-          void loadProfile(data.user.id);
-        }
+    setDailyUnlocked(pinUnlockedToday());
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        setUser(data.session.user);
+        void loadProfile(data.session.user.id);
       }
       setAuthChecked(true);
     });
@@ -121,16 +125,14 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       const u = session?.user ?? null;
-      if (event === "SIGNED_IN" && u) {
-        if (loginIsStale()) {
-          void supabase.auth.signOut();
-          localStorage.removeItem(LAST_LOGIN_KEY);
-          setUser(null);
-          setProfile(null);
-          setAuthChecked(true);
-          return;
+      if (event === "SIGNED_IN") {
+        // Signing in counts as today's access check.
+        try {
+          localStorage.setItem(PIN_DAY_KEY, today());
+        } catch {
+          /* storage unavailable */
         }
-        localStorage.setItem(LAST_LOGIN_KEY, String(Date.now()));
+        setDailyUnlocked(true);
       }
       setUser(u);
       if (u) void loadProfile(u.id);
@@ -146,7 +148,17 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setRoleState("cashier");
     localStorage.setItem("shelfos:role", "cashier");
-    localStorage.removeItem(LAST_LOGIN_KEY);
+    localStorage.removeItem(PIN_DAY_KEY);
+    setDailyUnlocked(false);
+  }, []);
+
+  const unlockDaily = useCallback(() => {
+    try {
+      localStorage.setItem(PIN_DAY_KEY, today());
+    } catch {
+      /* storage unavailable */
+    }
+    setDailyUnlocked(true);
   }, []);
 
   useEffect(() => {
@@ -197,8 +209,25 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       profile,
       authChecked,
       signOut,
+      dailyUnlocked,
+      unlockDaily,
     }),
-    [role, online, syncing, queuedCount, pendingOrders, runSync, shift, ready, user, profile, authChecked, signOut],
+    [
+      role,
+      online,
+      syncing,
+      queuedCount,
+      pendingOrders,
+      runSync,
+      shift,
+      ready,
+      user,
+      profile,
+      authChecked,
+      signOut,
+      dailyUnlocked,
+      unlockDaily,
+    ],
   );
 
   return <ShelfOSContext.Provider value={value}>{children}</ShelfOSContext.Provider>;
