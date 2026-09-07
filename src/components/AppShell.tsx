@@ -56,6 +56,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const avatarUrl =
     profile?.avatar_url || (user?.user_metadata?.["avatar_url"] as string | undefined);
 
+  // Signed in, but the till still needs today's access PIN.
+  if (!dailyUnlocked) {
+    return <DailyPinLock name={profile?.full_name ?? undefined} onUnlock={unlockDaily} />;
+  }
+
   const handleSignOut = async () => {
     await signOut();
     void navigate({ to: "/login", replace: true });
