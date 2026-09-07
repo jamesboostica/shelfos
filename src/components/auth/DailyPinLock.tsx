@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
  * Once-a-day access check. The staff account stays signed in permanently; this
  * screen only confirms the person at the till knows today's 4-digit PIN.
  */
-export function DailyPinLock({ name, onUnlock }: { name?: string; onUnlock: () => void }) {
+export function DailyPinLock({ name, onUnlock }: { name?: string | undefined; onUnlock: () => void }) {
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
 
