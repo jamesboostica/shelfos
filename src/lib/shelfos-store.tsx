@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Role = "cashier" | "manager";
 export const MANAGER_PIN = "4875";
+export const CASHIER_PIN = "1234";
 export const CASHIER_ID = "Amina W.";
 
 export interface AuthProfile {
@@ -48,7 +49,7 @@ interface Ctx {
 // Access rule: the signed-in session persists indefinitely — staff stay logged
 // in. Once per calendar day the register asks for the 4-digit access PIN.
 const PIN_DAY_KEY = "shelfos:pin-day";
-export const ACCESS_PIN = MANAGER_PIN;
+export const ACCESS_PIN = CASHIER_PIN;
 
 function today(): string {
   return new Date().toDateString();
