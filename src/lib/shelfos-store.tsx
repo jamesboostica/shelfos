@@ -177,7 +177,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
         markSession(false);
       }
       setUser(u);
-      if (u) void loadProfile(u.id);
+      if (u) void loadProfile(u.id).catch(() => {});
       else setProfile(null);
       setAuthChecked(true);
     });
