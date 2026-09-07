@@ -62,6 +62,7 @@ export function ReceiptModal({
                     <p className="font-medium leading-tight">{item.product_name}</p>
                     <div className="num flex justify-between text-[11px]">
                       <span>
+                        {item.sku ? `${item.sku} · ` : ""}
                         {item.quantity} × {amountOnly(item.unit_price)}
                       </span>
                       <span>{amountOnly(item.quantity * item.unit_price)}</span>
