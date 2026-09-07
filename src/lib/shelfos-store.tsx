@@ -40,6 +40,8 @@ interface Ctx {
   user: User | null;
   profile: AuthProfile | null;
   authChecked: boolean;
+  /** Synchronous hint that this device previously signed in (pre-verification). */
+  hasCachedSession: boolean;
   signOut: () => Promise<void>;
   /** True once today's 4-digit access PIN has been entered on this device. */
   dailyUnlocked: boolean;
@@ -50,6 +52,19 @@ interface Ctx {
 // in. Once per calendar day the register asks for the 4-digit access PIN.
 const PIN_DAY_KEY = "shelfos:pin-day";
 export const ACCESS_PIN = CASHIER_PIN;
+
+// Cheap synchronous hint that this device has a signed-in session, so the
+// register can open instantly while the real session is verified in the
+// background (the preview brokers storage over postMessage, which is slow).
+const HAD_SESSION_KEY = "shelfos:had-session";
+
+function hadSessionHint(): boolean {
+  try {
+    return localStorage.getItem(HAD_SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 function today(): string {
   return new Date().toDateString();
@@ -73,6 +88,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [hasCachedSession, setHasCachedSession] = useState(hadSessionHint);
   const [dailyUnlocked, setDailyUnlocked] = useState(false);
   const busy = useRef(false);
 
@@ -114,10 +130,22 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   // Auth listener: keep the signed-in user and their profile role in sync.
   useEffect(() => {
     setDailyUnlocked(pinUnlockedToday());
+    const markSession = (signedIn: boolean) => {
+      try {
+        if (signedIn) localStorage.setItem(HAD_SESSION_KEY, "1");
+        else localStorage.removeItem(HAD_SESSION_KEY);
+      } catch {
+        /* storage unavailable */
+      }
+      setHasCachedSession(signedIn);
+    };
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
         setUser(data.session.user);
+        markSession(true);
         void loadProfile(data.session.user.id);
+      } else {
+        markSession(false);
       }
       setAuthChecked(true);
     });
@@ -127,6 +155,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       const u = session?.user ?? null;
       if (event === "SIGNED_IN") {
+        markSession(true);
         // Signing in counts as today's access check.
         try {
           localStorage.setItem(PIN_DAY_KEY, today());
@@ -134,6 +163,8 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
           /* storage unavailable */
         }
         setDailyUnlocked(true);
+      } else if (event === "SIGNED_OUT") {
+        markSession(false);
       }
       setUser(u);
       if (u) void loadProfile(u.id);
@@ -150,6 +181,8 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     setRoleState("cashier");
     localStorage.setItem("shelfos:role", "cashier");
     localStorage.removeItem(PIN_DAY_KEY);
+    localStorage.removeItem(HAD_SESSION_KEY);
+    setHasCachedSession(false);
     setDailyUnlocked(false);
   }, []);
 
@@ -209,6 +242,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       user,
       profile,
       authChecked,
+      hasCachedSession,
       signOut,
       dailyUnlocked,
       unlockDaily,
@@ -225,6 +259,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       user,
       profile,
       authChecked,
+      hasCachedSession,
       signOut,
       dailyUnlocked,
       unlockDaily,

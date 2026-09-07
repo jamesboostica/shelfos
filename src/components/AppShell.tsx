@@ -19,7 +19,7 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, signOut, dailyUnlocked, unlockDaily } =
+  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, hasCachedSession, signOut, dailyUnlocked, unlockDaily } =
     useShelfOS();
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
@@ -47,12 +47,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Public screens render bare — no register chrome around them.
   if (isPublicRoute) return <>{children}</>;
 
-  // While the session is being verified (or a signed-out user is being sent
-  // to /login) hold the register behind the preloader.
-  if (!authChecked || !user) return <RegisterPreloader done={false} />;
+  // While the session is being verified, open instantly if this device was
+  // signed in before; the real session check reconciles in the background.
+  // Signed-out users (verified) are held here while they redirect to /login.
+  if (!user && (authChecked || !hasCachedSession)) return <RegisterPreloader done={false} />;
 
   const displayName =
-    profile?.full_name || (user?.user_metadata?.["full_name"] as string | undefined) || user?.email || "";
+    profile?.full_name ||
+    (user?.user_metadata?.["full_name"] as string | undefined) ||
+    user?.email ||
+    "Staff";
   const avatarUrl =
     profile?.avatar_url || (user?.user_metadata?.["avatar_url"] as string | undefined);
 
@@ -169,7 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
 
-            {user ? (
+            {user || hasCachedSession ? (
               <div className="flex items-center gap-2">
                 {avatarUrl ? (
                   <img
