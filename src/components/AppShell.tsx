@@ -173,7 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
 
-            {user ? (
+            {user || hasCachedSession ? (
               <div className="flex items-center gap-2">
                 {avatarUrl ? (
                   <img
