@@ -48,6 +48,7 @@ const CATEGORY_PILLS = ["All Items", ...CATEGORIES] as const;
 interface CartLine {
   product_id: number;
   name: string;
+  sku: string;
   unit_price: number;
   unit_cost: number;
   quantity: number;
@@ -127,6 +128,7 @@ function PosPage() {
         {
           product_id: p.id!,
           name: p.name,
+          sku: p.sku,
           unit_price: p.selling_price,
           unit_cost: p.cost_price,
           quantity: 1,
@@ -237,7 +239,12 @@ function PosPage() {
       local_id: localId,
       created_at: createdAt,
       cashier_id: shiftCashier,
-      items: cart.map((l) => ({ product_name: l.name, quantity: l.quantity, unit_price: l.unit_price })),
+      items: cart.map((l) => ({
+        product_name: l.name,
+        sku: l.sku,
+        quantity: l.quantity,
+        unit_price: l.unit_price,
+      })),
       subtotal: net,
       tax,
       total,
@@ -245,6 +252,11 @@ function PosPage() {
       tendered: cashPaid || undefined,
       change: change || undefined,
       reference: reference || undefined,
+      is_split: split || undefined,
+      cash: split ? splitCash : method === "cash" ? total : undefined,
+      mobile_money: split ? splitMobile : method === "mobile_money" ? total : undefined,
+      card: split ? splitCard : method === "card" ? total : undefined,
+      status: "completed",
     });
     setCart([]);
     setTendered(0);

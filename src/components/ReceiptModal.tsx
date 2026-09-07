@@ -46,6 +46,12 @@ export function ReceiptModal({
                   <span>Cashier</span>
                   <span>{receipt.cashier_id}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span>Items / Units</span>
+                  <span>
+                    {receipt.items.length} / {receipt.items.reduce((s, i) => s + i.quantity, 0)}
+                  </span>
+                </div>
               </div>
 
               <div className="my-3 border-t border-dashed border-border" />
@@ -56,6 +62,7 @@ export function ReceiptModal({
                     <p className="font-medium leading-tight">{item.product_name}</p>
                     <div className="num flex justify-between text-[11px]">
                       <span>
+                        {item.sku ? `${item.sku} · ` : ""}
                         {item.quantity} × {amountOnly(item.unit_price)}
                       </span>
                       <span>{amountOnly(item.quantity * item.unit_price)}</span>
@@ -81,8 +88,30 @@ export function ReceiptModal({
                 </div>
                 <div className="flex justify-between pt-1">
                   <span>Paid via</span>
-                  <span>{paymentLabel(receipt.payment_method)}</span>
+                  <span>{receipt.is_split ? "Split payment" : paymentLabel(receipt.payment_method)}</span>
                 </div>
+                {receipt.is_split && (
+                  <>
+                    {!!receipt.cash && (
+                      <div className="flex justify-between">
+                        <span>· Cash</span>
+                        <span>{amountOnly(receipt.cash)}</span>
+                      </div>
+                    )}
+                    {!!receipt.mobile_money && (
+                      <div className="flex justify-between">
+                        <span>· Mobile Money</span>
+                        <span>{amountOnly(receipt.mobile_money)}</span>
+                      </div>
+                    )}
+                    {!!receipt.card && (
+                      <div className="flex justify-between">
+                        <span>· Card</span>
+                        <span>{amountOnly(receipt.card)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
                 {receipt.payment_method === "cash" && receipt.tendered != null && (
                   <>
                     <div className="flex justify-between">
