@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          line_no: number
+          order_local_id: string
+          product_name: string
+          quantity: number
+          sku: string | null
+          unit_cost: number
+          unit_price: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          line_no?: number
+          order_local_id: string
+          product_name: string
+          quantity?: number
+          sku?: string | null
+          unit_cost?: number
+          unit_price?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          line_no?: number
+          order_local_id?: string
+          product_name?: string
+          quantity?: number
+          sku?: string | null
+          unit_cost?: number
+          unit_price?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          cashier_id: string | null
+          created_at: string
+          id: string
+          local_id: string
+          payment_method: string
+          sold_at: string
+          split_details: Json
+          status: string
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          cashier_id?: string | null
+          created_at?: string
+          id?: string
+          local_id: string
+          payment_method?: string
+          sold_at?: string
+          split_details?: Json
+          status?: string
+          total_amount?: number
+          user_id: string
+        }
+        Update: {
+          cashier_id?: string | null
+          created_at?: string
+          id?: string
+          local_id?: string
+          payment_method?: string
+          sold_at?: string
+          split_details?: Json
+          status?: string
+          total_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -38,6 +116,87 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: string | null
+        }
+        Relationships: []
+      }
+      shifts: {
+        Row: {
+          cashier_id: string | null
+          closed_at: string | null
+          closing_cash_counted: number | null
+          created_at: string
+          difference: number | null
+          expected_cash: number | null
+          id: string
+          local_id: string
+          opened_at: string | null
+          opening_float: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          cashier_id?: string | null
+          closed_at?: string | null
+          closing_cash_counted?: number | null
+          created_at?: string
+          difference?: number | null
+          expected_cash?: number | null
+          id?: string
+          local_id: string
+          opened_at?: string | null
+          opening_float?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          cashier_id?: string | null
+          closed_at?: string | null
+          closing_cash_counted?: number | null
+          created_at?: string
+          difference?: number | null
+          expected_cash?: number | null
+          id?: string
+          local_id?: string
+          opened_at?: string | null
+          opening_float?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stock_adjustments: {
+        Row: {
+          adjusted_at: string | null
+          created_at: string
+          delta: number
+          id: string
+          local_id: string
+          product_name: string | null
+          reason: string | null
+          sku: string | null
+          user_id: string
+        }
+        Insert: {
+          adjusted_at?: string | null
+          created_at?: string
+          delta?: number
+          id?: string
+          local_id: string
+          product_name?: string | null
+          reason?: string | null
+          sku?: string | null
+          user_id: string
+        }
+        Update: {
+          adjusted_at?: string | null
+          created_at?: string
+          delta?: number
+          id?: string
+          local_id?: string
+          product_name?: string | null
+          reason?: string | null
+          sku?: string | null
+          user_id?: string
         }
         Relationships: []
       }
