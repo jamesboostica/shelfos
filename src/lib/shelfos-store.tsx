@@ -250,6 +250,24 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(t);
   }, [online, queuedCount, runSync]);
 
+  // Offline health: how much work is held here, how old it is, and whether the
+  // browser has promised to keep it. Refreshed every 20s and after each sync.
+  useEffect(() => {
+    let alive = true;
+    const refresh = async () => {
+      const [q, s] = await Promise.all([queueHealth(), storageHealth()]);
+      if (!alive) return;
+      setQueue(q);
+      setStoragePersisted(s.persisted);
+    };
+    void refresh().catch(() => {});
+    const t = setInterval(() => void refresh().catch(() => {}), 20000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [queuedCount, syncing]);
+
   const shift = useLiveQuery(
     () => getDb().shifts.where("status").equals("open").first(),
     [],
