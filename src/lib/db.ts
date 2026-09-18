@@ -66,6 +66,9 @@ export interface SyncQueueRow {
   payload: unknown;
   status: "pending" | "synced" | "failed";
   retry_count?: number;
+  /** Epoch ms; the row waits until this moment before the next upload attempt. */
+  next_attempt_at?: number;
+  last_error?: string;
   timestamp: number;
 }
 
