@@ -11,7 +11,7 @@ import {
 import { useLiveQuery } from "dexie-react-hooks";
 import type { User } from "@supabase/supabase-js";
 import { ensureSeeded, getDb, type Order, type Shift } from "./db";
-import { drainSyncQueue, pullRemoteProducts } from "./sync-service";
+import { drainSyncQueue, pullRemoteProducts, requestDurableStorage } from "./sync-service";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Role = "cashier" | "manager";
@@ -209,6 +209,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem("shelfos:role");
     if (stored === "manager" || stored === "cashier") setRoleState(stored);
     ensureSeeded().finally(() => setReady(true));
+    void requestDurableStorage();
     const sync = () => {
       setOnline(navigator.onLine);
       if (navigator.onLine) void runSync();
