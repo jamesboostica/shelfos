@@ -53,6 +53,10 @@ interface Ctx {
   /** True once today's 4-digit access PIN has been entered on this device. */
   dailyUnlocked: boolean;
   unlockDaily: () => void;
+  /** Everything still held on this device: sales, shifts and stock changes. */
+  queue: QueueHealth;
+  /** True when the browser promised not to evict this till's stored work. */
+  storagePersisted: boolean;
 }
 
 // Access rule: the signed-in session persists indefinitely — staff stay logged
