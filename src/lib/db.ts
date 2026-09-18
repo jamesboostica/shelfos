@@ -88,6 +88,11 @@ export class ShelfOSDatabase extends Dexie {
       shifts: "++id, cashier_id, status, opened_at",
       sync_queue: "++id, entity_type, status, timestamp",
     });
+    // v2 indexes the retry schedule so a queue holding days of offline work can
+    // be drained oldest-first without scanning every row.
+    this.version(2).stores({
+      sync_queue: "++id, entity_type, status, timestamp, next_attempt_at, [status+timestamp]",
+    });
   }
 }
 
