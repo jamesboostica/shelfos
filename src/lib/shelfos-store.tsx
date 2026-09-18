@@ -11,7 +11,14 @@ import {
 import { useLiveQuery } from "dexie-react-hooks";
 import type { User } from "@supabase/supabase-js";
 import { ensureSeeded, getDb, type Order, type Shift } from "./db";
-import { drainSyncQueue, pullRemoteProducts, requestDurableStorage } from "./sync-service";
+import {
+  drainSyncQueue,
+  pullRemoteProducts,
+  queueHealth,
+  requestDurableStorage,
+  storageHealth,
+  type QueueHealth,
+} from "./sync-service";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Role = "cashier" | "manager";
@@ -46,6 +53,10 @@ interface Ctx {
   /** True once today's 4-digit access PIN has been entered on this device. */
   dailyUnlocked: boolean;
   unlockDaily: () => void;
+  /** Everything still held on this device: sales, shifts and stock changes. */
+  queue: QueueHealth;
+  /** True when the browser promised not to evict this till's stored work. */
+  storagePersisted: boolean;
 }
 
 // Access rule: the signed-in session persists indefinitely — staff stay logged
@@ -90,6 +101,15 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   const [authChecked, setAuthChecked] = useState(false);
   const [hasCachedSession, setHasCachedSession] = useState(hadSessionHint);
   const [dailyUnlocked, setDailyUnlocked] = useState(false);
+  const [queue, setQueue] = useState<QueueHealth>({
+    pending: 0,
+    oldestAt: null,
+    oldestDays: 0,
+    stuck: 0,
+    lastError: null,
+    byType: {},
+  });
+  const [storagePersisted, setStoragePersisted] = useState(false);
   const busy = useRef(false);
 
   const pendingOrders = useLiveQuery(
@@ -229,6 +249,24 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     const t = setInterval(() => void runSync(), 30000);
     return () => clearInterval(t);
   }, [online, queuedCount, runSync]);
+
+  // Offline health: how much work is held here, how old it is, and whether the
+  // browser has promised to keep it. Refreshed every 20s and after each sync.
+  useEffect(() => {
+    let alive = true;
+    const refresh = async () => {
+      const [q, s] = await Promise.all([queueHealth(), storageHealth()]);
+      if (!alive) return;
+      setQueue(q);
+      setStoragePersisted(s.persisted);
+    };
+    void refresh().catch(() => {});
+    const t = setInterval(() => void refresh().catch(() => {}), 20000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [queuedCount, syncing]);
 
   const shift = useLiveQuery(
     () => getDb().shifts.where("status").equals("open").first(),
