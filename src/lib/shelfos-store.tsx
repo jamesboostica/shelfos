@@ -209,6 +209,7 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem("shelfos:role");
     if (stored === "manager" || stored === "cashier") setRoleState(stored);
     ensureSeeded().finally(() => setReady(true));
+    void requestDurableStorage();
     const sync = () => {
       setOnline(navigator.onLine);
       if (navigator.onLine) void runSync();
