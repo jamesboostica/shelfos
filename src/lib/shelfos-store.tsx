@@ -101,6 +101,15 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   const [authChecked, setAuthChecked] = useState(false);
   const [hasCachedSession, setHasCachedSession] = useState(hadSessionHint);
   const [dailyUnlocked, setDailyUnlocked] = useState(false);
+  const [queue, setQueue] = useState<QueueHealth>({
+    pending: 0,
+    oldestAt: null,
+    oldestDays: 0,
+    stuck: 0,
+    lastError: null,
+    byType: {},
+  });
+  const [storagePersisted, setStoragePersisted] = useState(false);
   const busy = useRef(false);
 
   const pendingOrders = useLiveQuery(
