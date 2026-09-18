@@ -11,7 +11,7 @@ import {
 import { useLiveQuery } from "dexie-react-hooks";
 import type { User } from "@supabase/supabase-js";
 import { ensureSeeded, getDb, type Order, type Shift } from "./db";
-import { drainSyncQueue, pullRemoteProducts } from "./sync-service";
+import { drainSyncQueue, pullRemoteProducts, requestDurableStorage } from "./sync-service";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Role = "cashier" | "manager";
