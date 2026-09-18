@@ -639,28 +639,17 @@ async function runSeed() {
   if (count === 0) {
     await db.products.bulkAdd(SEED_PRODUCTS as Product[]);
   } else if (version !== CATALOG_VERSION) {
-    // Refresh the demo catalogue in place: keep stock counts for SKUs the
-    // till already knows, add the new lines, and re-file old categories.
+    // The catalogue was replaced with the store's own stock list: clear the old
+    // lines and load the new ones, keeping counted stock for SKUs we still sell.
     const existing = await db.products.toArray();
     const bySku = new Map(existing.map((p) => [p.sku, p]));
-    for (const seedRow of SEED_PRODUCTS) {
-      const current = bySku.get(seedRow.sku);
-      if (current?.id) {
-        await db.products.update(current.id, {
-          category: seedRow.category,
-          subcategory: seedRow.subcategory,
-          name: seedRow.name,
-        });
-      } else {
-        await db.products.add(seedRow as Product);
-      }
-    }
-    const seedSkus = new Set(SEED_PRODUCTS.map((p) => p.sku));
-    for (const p of existing) {
-      if (!seedSkus.has(p.sku) && p.id && !CATEGORIES.includes(p.category as (typeof CATEGORIES)[number])) {
-        await db.products.update(p.id, { category: "Home Storage" });
-      }
-    }
+    await db.products.clear();
+    await db.products.bulkAdd(
+      SEED_PRODUCTS.map((seedRow) => {
+        const known = bySku.get(seedRow.sku);
+        return { ...seedRow, stock_quantity: known ? known.stock_quantity : seedRow.stock_quantity } as Product;
+      }),
+    );
   }
 
   if (typeof localStorage !== "undefined") localStorage.setItem("shelfos:catalog", CATALOG_VERSION);
