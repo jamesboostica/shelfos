@@ -225,3 +225,44 @@ export async function drainSyncQueue(
 export async function pullRemoteProducts(): Promise<number> {
   return 0;
 }
+
+export interface QueueHealth {
+  /** Every change still waiting to reach the cloud (sales, shifts, stock). */
+  pending: number;
+  /** Epoch ms of the oldest waiting change, or null when the queue is empty. */
+  oldestAt: number | null;
+  /** Whole days the oldest waiting change has been held on this device. */
+  oldestDays: number;
+  /** Rows that have retried a lot; still queued, just flagged for the manager. */
+  stuck: number;
+  lastError: string | null;
+  byType: Record<string, number>;
+}
+
+/**
+ * Snapshot of everything held offline. Read by the till's sync panel so staff
+ * can see that a long offline stretch is safely stored rather than lost.
+ */
+export async function queueHealth(): Promise<QueueHealth> {
+  const rows = await getDb().sync_queue.where("status").equals("pending").toArray();
+  if (rows.length === 0) {
+    return { pending: 0, oldestAt: null, oldestDays: 0, stuck: 0, lastError: null, byType: {} };
+  }
+  const oldestAt = rows.reduce((min, r) => Math.min(min, r.timestamp), rows[0]!.timestamp);
+  const byType: Record<string, number> = {};
+  let stuck = 0;
+  let lastError: string | null = null;
+  for (const r of rows) {
+    byType[r.entity_type] = (byType[r.entity_type] ?? 0) + 1;
+    if ((r.retry_count ?? 0) >= STUCK_AFTER_ATTEMPTS) stuck += 1;
+    if (r.last_error) lastError = r.last_error;
+  }
+  return {
+    pending: rows.length,
+    oldestAt,
+    oldestDays: Math.floor((Date.now() - oldestAt) / 86_400_000),
+    stuck,
+    lastError,
+    byType,
+  };
+}
