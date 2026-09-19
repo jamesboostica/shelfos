@@ -98,6 +98,19 @@ function PosPage() {
     );
   }, [products, query, category, subcategory]);
 
+  // Category pills follow the real catalogue: known categories keep their house
+  // order, anything new in the stock list is appended, empty ones are hidden.
+  const categoryPills = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of products ?? []) counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
+    const known = CATEGORIES.filter((c) => counts.has(c));
+    const extra = [...counts.keys()].filter((c) => !CATEGORIES.includes(c as never)).sort();
+    return [
+      { name: "All Items", count: products?.length ?? 0 },
+      ...[...known, ...extra].map((c) => ({ name: c, count: counts.get(c) ?? 0 })),
+    ];
+  }, [products]);
+
   const subPills = useMemo(() => {
     if (category === "All Items") return [] as string[];
     const seen = new Set<string>();
