@@ -485,12 +485,10 @@ function PosPage() {
                 className="touch-target pl-9 text-base"
               />
             </div>
-            {role === "manager" && (
-              <Button variant="outline" className="touch-target shrink-0" onClick={() => setAddOpen(true)}>
-                <PackagePlus className="mr-2 h-4 w-4" />
-                Add Item
-              </Button>
-            )}
+            <Button variant="outline" className="touch-target shrink-0" onClick={() => setAddOpen(true)}>
+              <PackagePlus className="mr-2 h-4 w-4" />
+              Add Item
+            </Button>
           </div>
           <div className="flex flex-wrap gap-2">
             {categoryPills.map(({ name, count }) => (
