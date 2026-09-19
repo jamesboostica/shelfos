@@ -37,11 +37,9 @@ export const Route = createFileRoute("/inventory")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: () => (
-    <ManagerOnly area="Inventory">
-      <InventoryPage />
-    </ManagerOnly>
-  ),
+  // Staff can add items and record stock changes; cost, margin and CSV tools
+  // stay manager-only inside the page.
+  component: InventoryPage,
 });
 
 type Draft = {

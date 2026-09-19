@@ -646,4 +646,4 @@ function PosPage() {
   );
 }
 
-const shiftCashier = "Amina W.";
+const shiftCashier = "Benson";
