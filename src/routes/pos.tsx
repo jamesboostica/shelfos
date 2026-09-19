@@ -44,7 +44,6 @@ export const Route = createFileRoute("/pos")({
   component: PosPage,
 });
 
-const CATEGORY_PILLS = ["All Items", ...CATEGORIES] as const;
 
 interface CartLine {
   product_id: number;
