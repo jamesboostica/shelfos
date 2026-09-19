@@ -481,21 +481,24 @@ function PosPage() {
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            {CATEGORY_PILLS.map((c) => (
+            {categoryPills.map(({ name, count }) => (
               <button
-                key={c}
+                key={name}
                 onClick={() => {
-                  setCategory(c);
+                  setCategory(name);
                   setSubcategory("All");
                 }}
                 className={cn(
-                  "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
-                  category === c
+                  "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
+                  category === name
                     ? "border-brand bg-brand-soft text-accent-foreground"
                     : "border-border bg-card text-muted-foreground hover:bg-secondary",
                 )}
               >
-                {c}
+                {name}
+                <span className="num rounded-full bg-secondary px-1.5 text-[11px] font-bold text-muted-foreground">
+                  {count}
+                </span>
               </button>
             ))}
           </div>
