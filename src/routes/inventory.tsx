@@ -16,7 +16,6 @@ import {
 import { CATEGORIES, getDb, type Product } from "@/lib/db";
 import { kes } from "@/lib/format";
 import { useShelfOS } from "@/lib/shelfos-store";
-import { ManagerOnly } from "@/components/ManagerOnly";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/inventory")({
@@ -37,11 +36,9 @@ export const Route = createFileRoute("/inventory")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: () => (
-    <ManagerOnly area="Inventory">
-      <InventoryPage />
-    </ManagerOnly>
-  ),
+  // Staff can add items and record stock changes; cost, margin and CSV tools
+  // stay manager-only inside the page.
+  component: InventoryPage,
 });
 
 type Draft = {
@@ -248,27 +245,31 @@ function InventoryPage() {
           Low stock only
         </Button>
         <div className="ml-auto flex flex-wrap gap-2">
-          <Button variant="outline" className="touch-target" onClick={exportCsv}>
-            <Download className="mr-2 h-4 w-4" /> Export CSV
-          </Button>
-          <Button
-            variant="outline"
-            className="touch-target"
-            onClick={() => fileRef.current?.click()}
-          >
-            <Upload className="mr-2 h-4 w-4" /> Import CSV
-          </Button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void importCsv(file);
-              e.target.value = "";
-            }}
-          />
+          {isManager && (
+            <>
+              <Button variant="outline" className="touch-target" onClick={exportCsv}>
+                <Download className="mr-2 h-4 w-4" /> Export CSV
+              </Button>
+              <Button
+                variant="outline"
+                className="touch-target"
+                onClick={() => fileRef.current?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" /> Import CSV
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void importCsv(file);
+                  e.target.value = "";
+                }}
+              />
+            </>
+          )}
           <Button className="touch-target" onClick={() => setDraft({ ...emptyDraft })}>
             <Plus className="mr-2 h-4 w-4" /> Add item
           </Button>
@@ -283,9 +284,9 @@ function InventoryPage() {
               <th className="px-4 py-3">Item</th>
               <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3 text-right">Stock</th>
-              <th className="px-4 py-3 text-right">Cost</th>
+              {isManager && <th className="px-4 py-3 text-right">Cost</th>}
               <th className="px-4 py-3 text-right">Price</th>
-              <th className="px-4 py-3 text-right">Margin</th>
+              {isManager && <th className="px-4 py-3 text-right">Margin</th>}
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -313,9 +314,13 @@ function InventoryPage() {
                   >
                     {p.stock_quantity}
                   </td>
-                  <td className="num px-4 py-3 text-right">{kes(p.cost_price)}</td>
+                  {isManager && (
+                    <td className="num px-4 py-3 text-right">{kes(p.cost_price)}</td>
+                  )}
                   <td className="num px-4 py-3 text-right">{kes(p.selling_price)}</td>
-                  <td className="num px-4 py-3 text-right">{margin.toFixed(1)}%</td>
+                  {isManager && (
+                    <td className="num px-4 py-3 text-right">{margin.toFixed(1)}%</td>
+                  )}
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -352,7 +357,10 @@ function InventoryPage() {
             })}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                <td
+                  colSpan={isManager ? 8 : 6}
+                  className="px-4 py-10 text-center text-sm text-muted-foreground"
+                >
                   No items match this search.
                 </td>
               </tr>
@@ -395,14 +403,16 @@ function InventoryPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="Cost price (KES)">
-                <Input
-                  inputMode="decimal"
-                  className="touch-target num"
-                  value={draft.cost_price}
-                  onChange={(e) => setDraft({ ...draft, cost_price: e.target.value })}
-                />
-              </Field>
+              {isManager && (
+                <Field label="Cost price (KES)">
+                  <Input
+                    inputMode="decimal"
+                    className="touch-target num"
+                    value={draft.cost_price}
+                    onChange={(e) => setDraft({ ...draft, cost_price: e.target.value })}
+                  />
+                </Field>
+              )}
               <Field label="Selling price (KES)">
                 <Input
                   inputMode="decimal"
