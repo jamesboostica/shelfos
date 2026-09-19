@@ -1,5 +1,14 @@
-const CACHE = "shelfos-shell-v3";
-const SHELL = ["/", "/pos", "/inventory", "/shifts", "/manifest.webmanifest"];
+const CACHE = "shelfos-shell-v4";
+const SHELL = [
+  "/",
+  "/pos",
+  "/inventory",
+  "/shifts",
+  "/dashboard",
+  "/manifest.webmanifest",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -30,6 +39,24 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/reset-password"
   )
     return;
+
+  // Build assets carry a content hash, so a cached copy is always correct.
+  // Serving them cache-first means a till that has been offline for days still
+  // has every script and style it needs to boot.
+  if (url.pathname.startsWith("/assets/") || url.pathname.startsWith("/_build/")) {
+    event.respondWith(
+      caches.match(req).then(
+        (hit) =>
+          hit ??
+          fetch(req).then((res) => {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => undefined);
+            return res;
+          }),
+      ),
+    );
+    return;
+  }
 
   event.respondWith(
     fetch(req)

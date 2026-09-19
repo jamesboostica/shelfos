@@ -44,7 +44,6 @@ export const Route = createFileRoute("/pos")({
   component: PosPage,
 });
 
-const CATEGORY_PILLS = ["All Items", ...CATEGORIES] as const;
 
 interface CartLine {
   product_id: number;
@@ -97,6 +96,19 @@ function PosPage() {
         (q === "" || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)),
     );
   }, [products, query, category, subcategory]);
+
+  // Category pills follow the real catalogue: known categories keep their house
+  // order, anything new in the stock list is appended, empty ones are hidden.
+  const categoryPills = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of products ?? []) counts.set(p.category, (counts.get(p.category) ?? 0) + 1);
+    const known = CATEGORIES.filter((c) => counts.has(c));
+    const extra = [...counts.keys()].filter((c) => !CATEGORIES.includes(c as never)).sort();
+    return [
+      { name: "All Items", count: products?.length ?? 0 },
+      ...[...known, ...extra].map((c) => ({ name: c, count: counts.get(c) ?? 0 })),
+    ];
+  }, [products]);
 
   const subPills = useMemo(() => {
     if (category === "All Items") return [] as string[];
@@ -481,21 +493,24 @@ function PosPage() {
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            {CATEGORY_PILLS.map((c) => (
+            {categoryPills.map(({ name, count }) => (
               <button
-                key={c}
+                key={name}
                 onClick={() => {
-                  setCategory(c);
+                  setCategory(name);
                   setSubcategory("All");
                 }}
                 className={cn(
-                  "rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
-                  category === c
+                  "flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
+                  category === name
                     ? "border-brand bg-brand-soft text-accent-foreground"
                     : "border-border bg-card text-muted-foreground hover:bg-secondary",
                 )}
               >
-                {c}
+                {name}
+                <span className="num rounded-full bg-secondary px-1.5 text-[11px] font-bold text-muted-foreground">
+                  {count}
+                </span>
               </button>
             ))}
           </div>

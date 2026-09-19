@@ -295,6 +295,8 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       signOut,
       dailyUnlocked,
       unlockDaily,
+      queue,
+      storagePersisted,
     }),
     [
       role,
@@ -312,6 +314,8 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       signOut,
       dailyUnlocked,
       unlockDaily,
+      queue,
+      storagePersisted,
     ],
   );
 

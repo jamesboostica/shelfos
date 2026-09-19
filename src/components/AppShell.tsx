@@ -19,7 +19,7 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, hasCachedSession, signOut, dailyUnlocked, unlockDaily } =
+  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, hasCachedSession, signOut, dailyUnlocked, unlockDaily, queue, storagePersisted } =
     useShelfOS();
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
@@ -121,11 +121,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   )}
                 </button>
               </PopoverTrigger>
-              <PopoverContent align="center" className="w-72">
+              <PopoverContent align="center" className="w-80">
                 <p className="text-sm font-bold text-navy">Pending sync</p>
                 <p className="num mt-0.5 text-xs text-muted-foreground">
                   {queuedCount} order{queuedCount === 1 ? "" : "s"} · {kes(queuedValue)} queued
                 </p>
+                {queue.pending > 0 && (
+                  <p className="num mt-1 text-xs text-muted-foreground">
+                    {queue.pending} change{queue.pending === 1 ? "" : "s"} saved on this device
+                    {queue.oldestDays > 0
+                      ? ` · oldest ${queue.oldestDays} day${queue.oldestDays === 1 ? "" : "s"} old`
+                      : ""}
+                  </p>
+                )}
                 <div className="mt-3 max-h-40 space-y-1 overflow-y-auto">
                   {pendingOrders.map((o) => (
                     <div key={o.local_id} className="num flex justify-between text-xs">
@@ -139,6 +147,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </p>
                   )}
                 </div>
+                <p className="mt-3 rounded-lg bg-secondary px-2.5 py-2 text-[11px] leading-snug text-muted-foreground">
+                  {storagePersisted
+                    ? "Protected storage on — sales keep saving here for days without internet and upload automatically when it returns."
+                    : "Sales keep saving on this device without internet and upload automatically when it returns."}
+                  {queue.stuck > 0 && (
+                    <span className="mt-1 block font-semibold text-warning">
+                      {queue.stuck} change{queue.stuck === 1 ? "" : "s"} retrying — nothing is lost.
+                    </span>
+                  )}
+                </p>
                 <Button
                   className="touch-target mt-3 w-full"
                   disabled={!online || queuedCount === 0 || syncing}
