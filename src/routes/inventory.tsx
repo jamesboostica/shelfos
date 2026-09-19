@@ -64,6 +64,7 @@ const emptyDraft: Draft = {
 
 function InventoryPage() {
   const { role } = useShelfOS();
+  const isManager = role === "manager";
   const products = useLiveQuery(
     () => getDb().products.where("is_archived").equals(0).toArray(),
     [],
