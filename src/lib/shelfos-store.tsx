@@ -51,9 +51,12 @@ interface Ctx {
   /** Synchronous hint that this device previously signed in (pre-verification). */
   hasCachedSession: boolean;
   signOut: () => Promise<void>;
-  /** True once today's 4-digit access PIN has been entered on this device. */
-  dailyUnlocked: boolean;
-  unlockDaily: () => void;
+  /** True once the 4-digit access PIN has been entered for this app session. */
+  unlocked: boolean;
+  unlock: () => void;
+  /** Re-locks the register so the PIN screen appears again. */
+  lock: () => void;
+
   /** Everything still held on this device: sales, shifts and stock changes. */
   queue: QueueHealth;
   /** True when the browser promised not to evict this till's stored work. */
@@ -61,9 +64,12 @@ interface Ctx {
 }
 
 // Access rule: the signed-in session persists indefinitely — staff stay logged
-// in. Once per calendar day the register asks for the 4-digit access PIN.
-const PIN_DAY_KEY = "shelfos:pin-day";
+// in. The 4-digit access PIN is required every time the app is opened,
+// refreshed, or woken after sitting idle in the background.
 export const ACCESS_PIN = CASHIER_PIN;
+/** Idle time in the background after which the register re-locks. */
+const IDLE_LOCK_MS = 5 * 60 * 1000;
+
 
 // Cheap synchronous hint that this device has a signed-in session, so the
 // register can open instantly while the real session is verified in the
@@ -78,17 +84,6 @@ function hadSessionHint(): boolean {
   }
 }
 
-function today(): string {
-  return new Date().toDateString();
-}
-
-function pinUnlockedToday(): boolean {
-  try {
-    return localStorage.getItem(PIN_DAY_KEY) === today();
-  } catch {
-    return false;
-  }
-}
 
 const ShelfOSContext = createContext<Ctx | null>(null);
 
@@ -101,7 +96,9 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<AuthProfile | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [hasCachedSession, setHasCachedSession] = useState(hadSessionHint);
-  const [dailyUnlocked, setDailyUnlocked] = useState(false);
+  // Always starts locked: a fresh load or refresh must pass the PIN screen.
+  const [unlocked, setUnlocked] = useState(false);
+
   const [queue, setQueue] = useState<QueueHealth>({
     pending: 0,
     oldestAt: null,
@@ -150,7 +147,6 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
 
   // Auth listener: keep the signed-in user and their profile role in sync.
   useEffect(() => {
-    setDailyUnlocked(pinUnlockedToday());
     const markSession = (signedIn: boolean) => {
       try {
         if (signedIn) localStorage.setItem(HAD_SESSION_KEY, "1");
@@ -187,14 +183,10 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       const u = session?.user ?? null;
       if (event === "SIGNED_IN") {
         markSession(true);
-        // Signing in counts as today's access check.
-        try {
-          localStorage.setItem(PIN_DAY_KEY, today());
-        } catch {
-          /* storage unavailable */
-        }
-        setDailyUnlocked(true);
+        // Signing in just now counts as this session's access check.
+        setUnlocked(true);
       } else if (event === "SIGNED_OUT") {
+
         markSession(false);
       }
       setUser(u);
@@ -211,20 +203,34 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setRoleState("cashier");
     localStorage.setItem("shelfos:role", "cashier");
-    localStorage.removeItem(PIN_DAY_KEY);
     localStorage.removeItem(HAD_SESSION_KEY);
     setHasCachedSession(false);
-    setDailyUnlocked(false);
+    setUnlocked(false);
   }, []);
 
-  const unlockDaily = useCallback(() => {
-    try {
-      localStorage.setItem(PIN_DAY_KEY, today());
-    } catch {
-      /* storage unavailable */
-    }
-    setDailyUnlocked(true);
+  const unlock = useCallback(() => setUnlocked(true), []);
+  const lock = useCallback(() => setUnlocked(false), []);
+
+  // App-state listener: re-lock whenever the app is backgrounded for longer
+  // than the idle window, so waking it up asks for the PIN again.
+  useEffect(() => {
+    let hiddenAt: number | null = null;
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        hiddenAt = Date.now();
+      } else if (hiddenAt !== null) {
+        if (Date.now() - hiddenAt >= IDLE_LOCK_MS) setUnlocked(false);
+        hiddenAt = null;
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pageshow", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pageshow", onVisibility);
+    };
   }, []);
+
 
   useEffect(() => {
     const stored = localStorage.getItem("shelfos:role");
@@ -294,8 +300,10 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       authChecked,
       hasCachedSession,
       signOut,
-      dailyUnlocked,
-      unlockDaily,
+      unlocked,
+      unlock,
+      lock,
+
       queue,
       storagePersisted,
     }),
@@ -313,8 +321,10 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
       authChecked,
       hasCachedSession,
       signOut,
-      dailyUnlocked,
-      unlockDaily,
+      unlocked,
+      unlock,
+      lock,
+
       queue,
       storagePersisted,
     ],

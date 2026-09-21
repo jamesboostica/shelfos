@@ -114,15 +114,17 @@ export function EmailPasswordForm() {
               Password
             </label>
             {mode === "signin" && (
-              <button
-                type="button"
-                onClick={() => setMode("reset")}
+              <a
+                href="https://shelfos.boostica.co.ke/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-xs font-semibold text-sky-700 underline-offset-2 hover:underline"
               >
                 Forgot password?
-              </button>
+              </a>
             )}
           </div>
+
           <input
             id="password"
             type="password"

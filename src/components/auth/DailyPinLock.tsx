@@ -5,10 +5,12 @@ import { ACCESS_PIN } from "@/lib/shelfos-store";
 import { cn } from "@/lib/utils";
 
 /**
- * Once-a-day access check. The staff account stays signed in permanently; this
- * screen only confirms the person at the till knows today's 4-digit PIN.
+ * Access check shown every time the app opens, is refreshed, or wakes after
+ * sitting idle. The staff account stays signed in permanently; this screen only
+ * confirms the person at the till knows the 4-digit access PIN.
  */
 export function DailyPinLock({ name, onUnlock }: { name?: string | undefined; onUnlock: () => void }) {
+
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
 
@@ -35,7 +37,7 @@ export function DailyPinLock({ name, onUnlock }: { name?: string | undefined; on
       <div className="text-center">
         <p className="text-xl font-extrabold tracking-tight text-slate-50">Register locked</p>
         <p className="mt-1 text-sm text-slate-400">
-          {name ? `Welcome back, ${name}. ` : ""}Enter today&apos;s 4-digit access PIN.
+          {name ? `Welcome back, ${name}. ` : ""}Enter your 4-digit access PIN to continue.
         </p>
       </div>
 
