@@ -19,8 +19,9 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, hasCachedSession, signOut, dailyUnlocked, unlockDaily, queue, storagePersisted } =
+  const { role, setRole, online, syncing, queuedCount, pendingOrders, syncNow, shift, user, profile, authChecked, hasCachedSession, signOut, unlocked, unlock, lock, queue, storagePersisted } =
     useShelfOS();
+
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
   const { pathname } = useLocation();
@@ -60,10 +61,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const avatarUrl =
     profile?.avatar_url || (user?.user_metadata?.["avatar_url"] as string | undefined);
 
-  // Signed in, but the till still needs today's access PIN.
-  if (!dailyUnlocked) {
-    return <DailyPinLock name={profile?.full_name ?? undefined} onUnlock={unlockDaily} />;
+  // Signed in, but the till still needs the access PIN for this session.
+  if (!unlocked) {
+    return <DailyPinLock name={profile?.full_name ?? undefined} onUnlock={unlock} />;
   }
+
 
   const handleSignOut = async () => {
     await signOut();
@@ -246,13 +248,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </div>
                   </div>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     className="touch-target mt-3 w-full"
+                    onClick={lock}
+                  >
+                    <Lock className="mr-2 h-4 w-4" />
+                    Lock register
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="touch-target mt-2 w-full"
                     onClick={() => void handleSignOut()}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Log Out
                   </Button>
+
                 </PopoverContent>
               </Popover>
             ) : (
