@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      error_reports: {
+        Row: {
+          ai_summary: string | null
+          created_at: string
+          extra_context: Json
+          id: string
+          local_id: string
+          message: string
+          online: boolean
+          reported_at: string
+          route: string
+          screen: string | null
+          stack: string | null
+          staff_notes: string | null
+          status: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          created_at?: string
+          extra_context?: Json
+          id?: string
+          local_id: string
+          message?: string
+          online?: boolean
+          reported_at?: string
+          route?: string
+          screen?: string | null
+          stack?: string | null
+          staff_notes?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          created_at?: string
+          extra_context?: Json
+          id?: string
+          local_id?: string
+          message?: string
+          online?: boolean
+          reported_at?: string
+          route?: string
+          screen?: string | null
+          stack?: string | null
+          staff_notes?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string
