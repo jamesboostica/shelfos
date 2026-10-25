@@ -11,6 +11,7 @@ import {
 import { useLiveQuery } from "dexie-react-hooks";
 import type { User } from "@supabase/supabase-js";
 import { ensureSeeded, getDb, type Order, type Shift } from "./db";
+import { flushPendingErrorReports } from "./error-reports";
 import {
   drainSyncQueue,
   pullRemoteProducts,
@@ -237,6 +238,8 @@ export function ShelfOSProvider({ children }: { children: ReactNode }) {
     if (stored === "manager" || stored === "cashier") setRoleState(stored);
     ensureSeeded().finally(() => setReady(true));
     void requestDurableStorage();
+    // Upload any error reports that were recorded while the till was offline.
+    void flushPendingErrorReports().catch(() => {});
     const sync = () => {
       setOnline(navigator.onLine);
       if (navigator.onLine) void runSync();

@@ -6,6 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sanitizeText, type ErrorReportInput } from "@/lib/error-reports";
+import type { Json } from "@/integrations/supabase/types";
 
 const SYSTEM_PROMPT = `You are the troubleshooting assistant for ShelfOS, an offline-first point-of-sale web app used by retail store staff (cashiers and a manager). Staff see an error screen and can describe what they were doing.
 
@@ -112,7 +113,7 @@ export const submitErrorReport = createServerFn({ method: "POST" })
       screen: sanitizeText(data.screen, 40) || null,
       online: data.online !== false,
       staff_notes: sanitizeText(data.staff_notes, 2000) || null,
-      extra_context: (data.extra_context ?? {}) as Record<string, unknown>,
+      extra_context: (data.extra_context ?? {}) as unknown as Json,
       reported_at: data.reported_at,
     };
     const { error } = await supabase
