@@ -22,6 +22,7 @@ import { getDb, type Order, type OrderItem } from "@/lib/db";
 import { kes, startOfDay } from "@/lib/format";
 import { ManagerOnly } from "@/components/ManagerOnly";
 import { ResetDataCard } from "@/components/admin/ResetDataCard";
+import { ErrorReportsCard } from "@/components/admin/ErrorReportsCard";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -357,6 +358,8 @@ function DashboardPage() {
           </div>
         )}
       </div>
+
+      <ErrorReportsCard />
 
       <ResetDataCard />
     </div>

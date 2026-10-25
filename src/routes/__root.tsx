@@ -3,16 +3,16 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
-  useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/AppShell";
 import { ClientGate } from "@/components/ClientGate";
+import { ErrorRecovery } from "@/components/ErrorRecovery";
 import { ShelfOSProvider } from "@/lib/shelfos-store";
 import { Toaster } from "@/components/ui/sonner";
 
