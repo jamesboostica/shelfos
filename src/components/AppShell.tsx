@@ -24,7 +24,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const [pinOpen, setPinOpen] = useState(false);
   const [now, setNow] = useState(() => clockTime());
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+
+  // TEMP verification hook: simulate a real route error via the URL hash.
+  // REMOVE after the offline error-report test.
+  useEffect(() => {
+    if (location.hash === "#crash-test") {
+      throw new Error("Simulated offline till failure (verification test)");
+    }
+  }, [location.hash]);
   const navigate = useNavigate();
 
   useEffect(() => {
