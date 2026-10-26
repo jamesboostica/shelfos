@@ -16,6 +16,8 @@ const NAV = [
   { to: "/inventory", label: "Inventory", icon: Package, managerOnly: false },
   { to: "/shifts", label: "Shifts", icon: Wallet, managerOnly: false },
   { to: "/dashboard", label: "Reports", icon: BarChart3, managerOnly: true },
+  // TEMP verification link — REMOVE after the offline error-report test.
+  { to: "/boom", label: "CRASHTEST", icon: RefreshCw, managerOnly: false },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
