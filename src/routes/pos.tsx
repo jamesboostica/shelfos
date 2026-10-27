@@ -56,6 +56,10 @@ interface CartLine {
 }
 
 function PosPage() {
+  // TEMP verification hook: crash the POS route via ?crash-test=1. REMOVE after test.
+  if (typeof window !== "undefined" && window.location.search.includes("crash-test")) {
+    throw new Error("Simulated offline till failure (verification test)");
+  }
   const { shift, ready, role } = useShelfOS();
   const products = useLiveQuery(() => getDb().products.where("is_archived").equals(0).toArray(), [], []);
   const [query, setQuery] = useState("");
